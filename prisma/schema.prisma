@@ -14,17 +14,18 @@ model Role {
   id          Int            @id @default(autoincrement())
   value       String         @unique
   description String
-  users       UsersOnRoles[]
+  users       User[]
+  UsersRoles  UsersRoles[]
 }
 
-model UsersOnRoles {
-  id     Int  @id @default(autoincrement())
+model UsersRoles {
+
   userId Int
   roleId Int
-  user   User @relation(fields: [userId], references: [id])
-  role   Role @relation(fields: [roleId], references: [id])
+  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, roleId])
+  @@id([userId, roleId])
 }
 
 model User {
@@ -33,7 +34,8 @@ model User {
   email          String         @unique
   dateOfBirth    DateTime?
   password       String
-  roles          UsersOnRoles[]
+  roles          Role[]
+  UsersRoles     UsersRoles[]
   avatar         String
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -51,7 +53,7 @@ model Facility {
   description String?
   ownerId     Int
 
-  owner User @relation(fields: [ownerId], references: [id])
+  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   bookings Booking[]
 }
@@ -65,8 +67,8 @@ model Booking {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
 
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  facility Facility @relation(fields: [facilityId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
 
 }

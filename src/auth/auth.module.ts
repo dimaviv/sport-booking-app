@@ -6,8 +6,9 @@ import {FilesService} from "../files/files.service";
 import {UserService} from "../user/user.service";
 import {JwtService} from "@nestjs/jwt";
 import {PrismaService} from "../prisma.service";
+import {RolesService} from "../roles/roles.service";
 
 @Module({
-  providers: [AuthResolver, AuthService, MailService, FilesService, UserService, JwtService, PrismaService]
+  providers: [AuthResolver, AuthService, MailService, FilesService, UserService, JwtService, PrismaService, RolesService]
 })
 export class AuthModule {}

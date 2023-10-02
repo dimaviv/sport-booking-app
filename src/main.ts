@@ -20,12 +20,12 @@ async function bootstrap() {
   });
   app.use(cookieParser());
   app.use(graphqlUploadExpress({maxFileSize: 5000000, maxFiles: 10 }));
-  app.useGlobalPipes(
-      new ValidationPipe({
-          whitelist: true,
-          transform: true,
-      })
-  )
+  // app.useGlobalPipes(
+  //     new ValidationPipe({
+  //         whitelist: true,
+  //         transform: true,
+  //     })
+  // )
 
 
 

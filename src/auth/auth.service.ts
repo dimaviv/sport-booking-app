@@ -56,8 +56,9 @@ export class AuthService {
                 activationLink,
                 avatar:null,
             },
-            include: {roles:true}
         });
+
+        //user.roles = [{id:1, userId:1, roleId:1}]
         const activationURL = process.env.API_URL+'users/activate/' + activationLink
         await this.mailService.sendActivationMail(user.email, activationURL)
         return this.issueTokens(user, response);
@@ -116,8 +117,9 @@ export class AuthService {
     private async validateUser(loginDto: LoginDto) {
         const user = await this.prisma.user.findUnique({
             where: { email: loginDto.email},
-            include: {roles:true}
+            //include: {roles: {orderBy:{id:'desc'}}}
         });
+
 
         const passwordEquals = await bcrypt.compare(
             loginDto.password,

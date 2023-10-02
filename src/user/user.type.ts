@@ -20,7 +20,7 @@ export class User {
     dateOfBirth: Date;
 
     @Field(() => [Role], {nullable: true})
-    roles: Role[];
+    roles?: Role[];
 
     @Field({nullable: true})
     avatar: string;

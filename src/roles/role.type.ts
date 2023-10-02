@@ -14,13 +14,6 @@ export class Role {
     description: string;
 
     @Field(() => [User], {nullable: true})
-    users: User[];
+    users?: User[];
 
-
-
-    // @Field(() => [Facility])
-    // facilities: Facility[];
-
-    // @Field(() => [Booking])
-    // bookings: Booking[];
 }

@@ -1,5 +1,7 @@
 import {IsNumber, IsString} from "class-validator";
+import {InputType} from "@nestjs/graphql";
 
+@InputType()
 export class BanUserDto {
 
     @IsNumber({},{message:"Must be a number"})
