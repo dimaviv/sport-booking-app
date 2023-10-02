@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id          Int            @id @default(autoincrement())
+  value       String         @unique
+  description String
+  users       UsersOnRoles[]
+}
+
+model UsersOnRoles {
+  id     Int  @id @default(autoincrement())
+  userId Int
+  roleId Int
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+
+  @@unique([userId, roleId])
+}
+
+model User {
+  id             Int            @id @default(autoincrement())
+  fullname       String?
+  email          String         @unique
+  dateOfBirth    DateTime?
+  password       String
+  roles          UsersOnRoles[]
+  avatar         String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  activationLink String         @unique
+  isActivated    Boolean        @default(false)
+
+  facilities Facility[]
+
+  bookings Booking[]
+}
+
+model Facility {
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  ownerId     Int
+
+  owner User @relation(fields: [ownerId], references: [id])
+
+  bookings Booking[]
+}
+
+model Booking {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  facilityId Int
+  startTime  DateTime
+  endTime    DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+}
