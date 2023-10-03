@@ -17,6 +17,7 @@ type LoginResponse {
 }
 
 type Mutation {
+  create(roleInput: RoleDto!): RoleResponse!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   refreshToken: String!
@@ -25,6 +26,7 @@ type Mutation {
 }
 
 type Query {
+  getByValue(name: String!): RoleResponse!
   hello: String!
 }
 
@@ -43,6 +45,15 @@ type Role {
   id: Float
   users: [User!]
   value: String
+}
+
+input RoleDto {
+  description: String!
+  value: String!
+}
+
+type RoleResponse {
+  role: Role!
 }
 
 input UpdateUserDto {

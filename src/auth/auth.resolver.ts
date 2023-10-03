@@ -15,32 +15,34 @@ export class AuthResolver {
     @Mutation(() => RegisterResponse)
     async register(
         @Args('registerInput') registerDto: RegisterDto,
-        @Context() context: { res: Response }) {
+        @Context() context: { req: Request, res: Response }) {
         if (registerDto.password !== registerDto.confirmPassword) {
             throw new BadRequestException({
                 confirmPassword: 'Password and confirm password are not the same'
             })
         }
-        const {user} = await this.authService.registration(registerDto, context.res);
+
+        const {user} = await this.authService.registration(registerDto, context.req.res);
         return {user}
     }
 
     @Mutation(() => LoginResponse)
     async login(
         @Args('loginInput') loginDto: LoginDto,
-        @Context() context: { res: Response }) {
-        return this.authService.login(loginDto, context.res);
+        @Context() context: { req: Request, res: Response }) {
+
+        return this.authService.login(loginDto, context.req.res);
     }
 
     @Mutation(() => String)
-    async logout(@Context() context: {res: Response}){
-        return this.authService.logout(context.res)
+    async logout( @Context() context: { req: Request, res: Response }){
+        return this.authService.logout(context.req.res)
     }
 
     @Mutation(() => String)
     async refreshToken(@Context() context: {req: Request, res: Response}){
         try {
-            return this.authService.refreshToken(context.req, context.res);
+            return this.authService.refreshToken(context.res.req, context.res);
         }catch (err){
             throw new BadRequestException(err.message);
         }

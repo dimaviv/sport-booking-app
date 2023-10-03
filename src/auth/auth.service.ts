@@ -8,6 +8,9 @@ import { v4 as uuidv4 } from 'uuid';
 import {Request, Response} from 'express'
 import {LoginDto, RegisterDto} from "./dto";
 import {User} from "../user/user.type";
+import {FacebookStrategy} from "./strategies/facebook.stategy";
+import {GoogleStrategy} from "./strategies/google.stategy";
+import {RolesService} from "../roles/roles.service";
 
 
 @Injectable()
@@ -17,10 +20,30 @@ export class AuthService {
         private readonly prisma: PrismaService,
         private readonly configService: ConfigService,
         private readonly mailService: MailService,
+        private readonly roleService: RolesService,
+        private readonly googleStrategy: GoogleStrategy,
+        private readonly facebookStrategy: FacebookStrategy,
         ) {
+    }
+
+    async validateOAuthUser(oauthUser: any, provider: 'google' | 'facebook') {
+        if (provider === 'google') {
+            return this.googleStrategy.validate(oauthUser.accessToken, oauthUser.refreshToken, oauthUser.profile, this.googleAuth);
+        } else if (provider === 'facebook') {
+            return this.facebookStrategy.validate(oauthUser.accessToken, oauthUser.refreshToken, oauthUser.profile, this.facebookAuth);
+        }
+
+        throw new UnauthorizedException('Invalid provider');
+    }
+    async googleAuth(){
+
+    }
+    async facebookAuth(){
+
     }
     async login(loginDto: LoginDto, response: Response) {
         const user = await this.validateUser(loginDto);
+
         if (!user){
             throw new HttpException(
                 "Incorrect email or password",
@@ -49,18 +72,28 @@ export class AuthService {
         const hashPassword = await bcrypt.hash(registerDto.password, 10);
         const activationLink =  await uuidv4()
 
+        const {role} = await this.roleService.getRoleByValue('USER')
+
         const user = await this.prisma.user.create({
             data: {
                 email: registerDto.email,
                 password: hashPassword,
                 activationLink,
-                avatar:null,
+                avatar:'null',
+                roles: {
+                    connect:{
+                        id: role.id
+                    }
+                }
+            },
+            include: {
+                roles: true,
             },
         });
 
-        //user.roles = [{id:1, userId:1, roleId:1}]
         const activationURL = process.env.API_URL+'users/activate/' + activationLink
         await this.mailService.sendActivationMail(user.email, activationURL)
+
         return this.issueTokens(user, response);
     }
 
@@ -99,6 +132,7 @@ export class AuthService {
     }
 
     private async issueTokens(user: User, response: Response) {
+
         const payload = { id: user.id, email: user.email, isActivated: user.isActivated, roles: user.roles };
         const accessToken = this.jwtService.sign(payload, {
             secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
@@ -109,7 +143,7 @@ export class AuthService {
             expiresIn: '7d',
         })
 
-        response.cookie('access_token', accessToken, {httpOnly:true})
+        response.cookie('access_token', accessToken, {httpOnly:true} )
         response.cookie('refresh_token', refreshToken, {httpOnly:true})
         return { user }
     }
@@ -117,7 +151,7 @@ export class AuthService {
     private async validateUser(loginDto: LoginDto) {
         const user = await this.prisma.user.findUnique({
             where: { email: loginDto.email},
-            //include: {roles: {orderBy:{id:'desc'}}}
+            include: {roles:true}
         });
 
 

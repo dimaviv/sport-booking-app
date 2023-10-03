@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import {CreateRoleDto} from "./dto/create-role.dto";
+import {PrismaService} from "../prisma.service";
 
 
 @Injectable()
 export class RolesService {
-    constructor() {}
+    constructor(
+        private readonly prisma: PrismaService
+    ) {}
 
-    // async createRole(dto: CreateRoleDto){
-    //     const role = await this.roleRepository.create(dto);
-    //     return role;
-    // }
-    //
-    // async getRoleByValue(value: string){
-    //     const role = await this.roleRepository.findOne({where:{value}})
-    //     return role
-    // }
+    async createRole(dto){
+        const role = await this.prisma.role.create({data: {...dto}});
+        return {role};
+    }
+
+    async getRoleByValue(value: string){
+        const role = await this.prisma.role.findUnique({where:{value:value}})
+        return {role}
+    }
 }

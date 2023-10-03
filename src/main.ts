@@ -10,22 +10,22 @@ async function bootstrap() {
     origin: `${process.env.API_URL}`,
     credentials:true,
     allowedHeaders: [
-        'Accept',
-        'Authorization',
-        'Content-Type',
-        'X-Requested-With',
-        'apollo-require-preflight'
+      'Accept',
+      'Authorization',
+      'Content-Type',
+      'X-Requested-With',
+      'apollo-require-preflight',
     ],
-    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS', 'PATCH']
-  });
+    methods: ['GET', 'PUT', 'POST', 'DELETE', 'OPTIONS'],
+    });
   app.use(cookieParser());
   app.use(graphqlUploadExpress({maxFileSize: 5000000, maxFiles: 10 }));
-  // app.useGlobalPipes(
-  //     new ValidationPipe({
-  //         whitelist: true,
-  //         transform: true,
-  //     })
-  // )
+  app.useGlobalPipes(
+      new ValidationPipe({
+          whitelist: true,
+          transform: true,
+      })
+  )
 
 
 

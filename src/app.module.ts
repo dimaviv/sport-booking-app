@@ -10,9 +10,10 @@ import {GraphQLModule} from "@nestjs/graphql";
 import {ApolloDriver} from "@nestjs/apollo";
 import {MailModule} from "./mail/mail.module";
 import {FilesModule} from "./files/files.module";
+import {RolesModule} from "./roles/roles.module";
 
 @Module({
-  imports: [AuthModule, UserModule, MailModule, FilesModule,
+  imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule,
     GraphQLModule.forRootAsync({
       imports: [ConfigModule, AppModule],
       inject: [ConfigService],
