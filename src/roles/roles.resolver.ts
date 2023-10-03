@@ -6,6 +6,9 @@ import {Request, Response} from "express";
 import {RolesService} from "./roles.service";
 import {RoleDto} from "./dto";
 import {RoleResponse} from "./types";
+import {UseGuards} from "@nestjs/common";
+import {RolesGuard} from "../auth/roles.guard";
+import {Roles} from "../auth/roles-auth.decorator";
 
 @Resolver()
 export class RolesResolver {
