@@ -15,6 +15,15 @@ export class UserResolver {
     ) {}
 
     @UseGuards(GraphqlAuthGuard)
+    @Query(() => User)
+    async getProfile(
+        @Context() context: {req: Request}
+    ){
+        const userId = context.req.user.id;
+        return await this.userService.getProfile(userId);
+    }
+
+    @UseGuards(GraphqlAuthGuard)
     @Mutation(() => User)
     async updateProfile(
         @Args('profileInput') updateUserDto: UpdateUserDto,

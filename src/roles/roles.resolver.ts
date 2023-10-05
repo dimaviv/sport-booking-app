@@ -1,14 +1,9 @@
-import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql';
+import {Args, Mutation, Query, Resolver} from '@nestjs/graphql';
 import {PrismaService} from "../prisma.service";
-import {LoginResponse} from "../auth/types";
-import {LoginDto, RegisterDto} from "../auth/dto";
-import {Request, Response} from "express";
 import {RolesService} from "./roles.service";
 import {RoleDto} from "./dto";
 import {RoleResponse} from "./types";
-import {UseGuards} from "@nestjs/common";
-import {RolesGuard} from "../auth/roles.guard";
-import {Roles} from "../auth/roles-auth.decorator";
+
 
 @Resolver()
 export class RolesResolver {

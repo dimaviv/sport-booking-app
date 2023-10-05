@@ -1,11 +1,9 @@
-import {HttpException, HttpStatus, Injectable} from '@nestjs/common';
-import {AddRoleDto} from "./dto/add-role-dto";
-import {CreateUserDto} from "./dto/create-users.dto";
-import {BanUserDto} from "./dto/ban-user.dto";
+import {BadRequestException, Injectable} from '@nestjs/common';
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {FilesService} from "../files/files.service";
 import {RolesService} from "../roles/roles.service";
 import {PrismaService} from "../prisma.service";
+import {InternalException} from "../../exceptions/validation.exception";
 
 @Injectable()
 export class UserService {
@@ -16,24 +14,37 @@ export class UserService {
     ) {}
 
     async updateProfile(userId:number, dto: UpdateUserDto, avatarFile: any) {
-        let updateData = {...dto, avatar:undefined};
-        if (avatarFile) {
-            const fileName = await this.fileService.saveAvatar(avatarFile);
-            updateData.avatar = fileName
+        try {
+            let updateData = {...dto, avatar:undefined};
+            if (avatarFile) {
+                const fileName = await this.fileService.saveAvatar(avatarFile);
+                updateData.avatar = fileName
+            }
+
+            return await this.prisma.user.update({
+                where: {id: userId},
+                data:{
+                    ...updateData
+                }
+            });
+        } catch (err) {
+            throw new InternalException(err.message);
         }
 
-        return await this.prisma.user.update({
-            where: {id: userId},
-            data:{
-                ...updateData
-            }
-        });
     }
 
-    // async activate(activationLink: string){
-    //     const user = await this.prisma.user.update({where:{activationLink}, data:{isActivated:true}});
-    //     return user;
-    // }
+    async getProfile(userId:number) {
+        try {
+            const user = await this.prisma.user.findUnique({where:{id:userId}})
+            if (!user) throw new BadRequestException('User not found');
+
+            return user
+
+        } catch (err) {
+            throw new InternalException(err.message);
+        }
+    }
+
 
 
     // async createUser(dto: CreateUserDto, activationLink: string){
