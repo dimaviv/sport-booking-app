@@ -22,11 +22,12 @@ type Mutation {
   logout: String!
   refreshToken: String!
   register(registerInput: RegisterDto!): RegisterResponse!
-  updateProfile(avatar: Upload, profileInput: UpdateUserDto!): User!
+  updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
 }
 
 type Query {
   getByValue(name: String!): RoleResponse!
+  getProfile: User!
   hello: String!
 }
 
@@ -69,7 +70,7 @@ type User {
   avatar: String
   createdAt: DateTime
   dateOfBirth: DateTime
-  email: String!
+  email: String
   fullname: String
   id: Float
   isActivated: Boolean

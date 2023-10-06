@@ -10,7 +10,7 @@ export class User {
     @Field({nullable: true})
     fullname: string;
 
-    @Field()
+    @Field({nullable: true})
     email: string;
 
     @Field({nullable: true})

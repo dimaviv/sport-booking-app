@@ -26,13 +26,13 @@ export class UserResolver {
     @UseGuards(GraphqlAuthGuard)
     @Mutation(() => User)
     async updateProfile(
-        @Args('profileInput') updateUserDto: UpdateUserDto,
+        @Args('profileInput', { nullable: true }) updateUserDto: UpdateUserDto,
         @Args('avatar', { type: () => GraphQLUpload, nullable: true })
             avatar: GraphQLUpload.FileUpload,
         @Context() context: {req: Request},
     ){
         const userId = context.req.user.id;
-        return this.userService.updateProfile(userId, updateUserDto, avatar)
+        return await this.userService.updateProfile(userId, updateUserDto, avatar)
     }
 
 }

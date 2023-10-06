@@ -15,15 +15,15 @@ export class FilesService {
 
             const {createReadStream} = await file
             const readStream = createReadStream()
-            console.log(await this.getFileSize(readStream)/1024)
 
-            if (await this.getFileSize(readStream)/1024 > MAX_ALLOWED_AVATAR_SIZE_KB) {
+            const buffer = await this.streamToBuffer(readStream);
+
+            if (buffer.length/1024 > MAX_ALLOWED_AVATAR_SIZE_KB) {
                 throw new HttpException('File size exceeds the limit', HttpStatus.BAD_REQUEST);
             }
 
             const fileNames: string[] = [];
 
-            console.log(file.filename)
             const extension = file.filename.slice(
                 ((file.filename.lastIndexOf('.') - 1) >>> 0) + 2
             );
@@ -41,13 +41,12 @@ export class FilesService {
                     fs.mkdirSync(filePath, { recursive: true });
                 }
 
-                const imageBuffer = await sharp(readStream)
+                const processedImageBuffer  = await sharp(buffer)
                     .resize(version.width, version.height)
                     .toBuffer();
 
-                console.log(filePath + fileName)
-                const resizedWriteStream = createWriteStream(filePath + fileName);
-                resizedWriteStream.write(imageBuffer);
+                const resizedWriteStream = createWriteStream(path.join(filePath, fileName));
+                resizedWriteStream.write(processedImageBuffer);
                 resizedWriteStream.end();
 
                 fileNames.push(fileName);
@@ -59,6 +58,15 @@ export class FilesService {
         }
     }
 
+    async streamToBuffer(readStream: NodeJS.ReadableStream): Promise<Buffer> {
+        return new Promise<Buffer>((resolve, reject) => {
+            const chunks: Buffer[] = [];
+            readStream.on('data', (chunk) => chunks.push(chunk));
+            readStream.on('end', () => resolve(Buffer.concat(chunks)));
+            readStream.on('error', (error) => reject(error));
+        });
+    }
+
     async checkFileSize(file, maxSizeKB = MAX_ALLOWED_AVATAR_SIZE_KB){
         const fileSizeInKB = file.size / 1024;
         if (fileSizeInKB > maxSizeKB) {
@@ -66,37 +74,8 @@ export class FilesService {
         }
     };
 
-    async getFileSize(readStream: NodeJS.ReadableStream): Promise<number> {
-        return new Promise((resolve, reject) => {
-            let size = 0;
 
-            readStream.on('data', (chunk) => {
-                size += chunk.length;
-            });
 
-            readStream.on('end', () => {
-                resolve(size);
-            });
 
-            readStream.on('error', (error) => {
-                reject(error);
-            });
-        });
-    }
-
-    async createFile(file): Promise<string>{
-        try {
-            const extension = file.originalname.slice((file.originalname.lastIndexOf(".") - 1 >>> 0) + 2);
-            const fileName = uuid.v4() + '.' + extension
-            const filePath = path.resolve(__dirname, '..', 'static')
-            if (!fs.existsSync(filePath)){
-                fs.mkdirSync(filePath, {recursive:true})
-            }
-            fs.writeFileSync(path.join(filePath, fileName), file.buffer)
-            return fileName;
-        }catch (e) {
-            throw new HttpException('Error during recording on disk', HttpStatus.INTERNAL_SERVER_ERROR)
-        }
-    }
 
 }

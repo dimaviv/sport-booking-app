@@ -15,18 +15,25 @@ export class UserService {
 
     async updateProfile(userId:number, dto: UpdateUserDto, avatarFile: any) {
         try {
-            let updateData = {...dto, avatar:undefined};
+            console.log('Start')
+            let updateData
+            if (dto){
+                 updateData = {...dto, avatar:undefined};
+            }
+
             if (avatarFile) {
                 const fileName = await this.fileService.saveAvatar(avatarFile);
                 updateData.avatar = fileName
             }
 
-            return await this.prisma.user.update({
+            const user = await this.prisma.user.update({
                 where: {id: userId},
                 data:{
                     ...updateData
                 }
             });
+
+            return user
         } catch (err) {
             throw new InternalException(err.message);
         }
