@@ -1,5 +1,23 @@
 import {IsEmail, IsNotEmpty, IsString, Length} from "class-validator";
 import {Field, InputType} from "@nestjs/graphql";
+import { GraphQLJSONObject } from 'graphql-type-json';
+
+
+@InputType()
+export class OAuthDto {
+    @Field()
+    accessToken: string;
+
+    @Field()
+    refreshToken: string;
+
+    @Field(() => GraphQLJSONObject)
+    profile: object
+
+    @Field()
+    provider: 'google' | 'facebook';
+}
+
 
 @InputType()
 export class RegisterDto {
@@ -20,8 +38,8 @@ export class RegisterDto {
     @IsString({message: "Must be string"})
     @Length(6, 16, {message:"Must contain 6 - 16 symbols"})
     readonly confirmPassword:string;
-
 }
+
 
 @InputType()
 export class LoginDto {
@@ -37,5 +55,7 @@ export class LoginDto {
     @IsString({message: "Must be string"})
     @Length(6, 16, {message:"Must contain 6 - 16 symbols"})
     readonly password:string;
-
 }
+
+
+

@@ -38,6 +38,7 @@
     "cookie-parser": "^1.4.6",
     "cross-env": "^7.0.3",
     "graphql": "^16.8.1",
+    "graphql-type-json": "^0.3.2",
     "graphql-upload": "^15.0.2",
     "nodemailer": "^6.9.5",
     "passport-facebook": "^3.0.0",

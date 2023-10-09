@@ -15,3 +15,9 @@ export class InternalException extends HttpException {
         super(message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
+
+export class UnauthorizedException extends HttpException {
+    constructor(message: string) {
+        super(message, HttpStatus.UNAUTHORIZED);
+    }
+}

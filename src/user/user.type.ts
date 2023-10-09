@@ -14,7 +14,7 @@ export class User {
     email: string;
 
     @Field({nullable: true})
-    password: string;
+    password?: string;
 
     @Field({nullable: true})
     dateOfBirth: Date;
@@ -32,10 +32,16 @@ export class User {
     updatedAt: Date;
 
     @Field({nullable: true})
-    activationLink: string;
+    activationLink?: string;
 
     @Field({nullable: true})
     isActivated: boolean;
+
+    @Field({nullable: true})
+    googleId?: string;
+
+    @Field({nullable: true})
+    facebookId?: string;
 
 
     // @Field(() => [Facility])

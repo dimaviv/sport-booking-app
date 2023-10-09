@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, VerifyCallback } from 'passport-facebook';
+import {User} from "../../user/user.type";
 
 @Injectable()
 export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
@@ -20,20 +21,21 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
         done: VerifyCallback,
     ) {
         try {
-            // Check if the user already exists in your database based on their Facebook profile information
-            const user = await this.userService.findByFacebookId(profile.id);
+            // Check if the user already exists in your database based on their profile information
+            const user = await this.userService.findByOAuthId(profile.id);
 
             if (!user) {
-                // If the user doesn't exist, create a new user based on the Facebook profile data
+                // If the user doesn't exist, create a new user based on the profile data
                 const newUser = await this.userService.createUserFromFacebookProfile(profile);
-                done(null, newUser);
+                done(null, newUser); // Return the newly created user
             } else {
                 // If the user exists, simply return the user
                 done(null, user);
             }
         } catch (error) {
             // Handle any errors that occur during the validation process
-            done(error, false);
+            done(error); // Pass the error to indicate validation failure
         }
     }
+
 }

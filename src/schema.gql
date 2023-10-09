@@ -71,7 +71,9 @@ type User {
   createdAt: DateTime
   dateOfBirth: DateTime
   email: String
+  facebookId: String
   fullname: String
+  googleId: String
   id: Float
   isActivated: Boolean
   password: String

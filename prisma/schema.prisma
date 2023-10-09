@@ -33,14 +33,18 @@ model User {
   fullname       String?
   email          String         @unique
   dateOfBirth    DateTime?
-  password       String
+  password       String?
   roles          Role[]
   UsersRoles     UsersRoles[]
   avatar         String?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
-  activationLink String         @unique
+  activationLink String?         @unique
   isActivated    Boolean        @default(false)
+
+  // Fields to store OAuth data
+  googleId       String?        @unique
+  facebookId     String?        @unique
 
   facilities Facility[]
 
