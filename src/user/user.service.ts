@@ -31,11 +31,11 @@ export class UserService {
         });
     }
 
-    // Google OAuth
-    async createUserFromGoogleProfile(profile: any): Promise<User> {
+    async createUserFromOAuthData(profile: any): Promise<User> {
         const {role} = await this.roleService.getRoleByValue('USER')
         const userInput  = {
             googleId: profile.googleId,
+            facebookId: profile.facebookId,
             fullname: profile.fullname,
             email: profile.email,
             isActivated: true,
@@ -56,32 +56,7 @@ export class UserService {
         });
 }
 
-    // Facebook OAuth
-    async createUserFromFacebookProfile(profile: any): Promise<User> {
-        const {role} = await this.roleService.getRoleByValue('USER')
-
-        const userInput  = {
-            facebookId: profile.id,
-            name: profile.displayName,
-            email: profile.email,
-            isActivated: true,
-            password: null,
-            activationLink: null,
-            roles: {
-                connect:{
-                    id: role.id
-                }
-            }
-        };
-
-        return await this.prisma.user.create({
-            data: {...userInput},
-            include: {
-                roles: true,
-            },
-        });
-    }
-
+    // User profile
     async updateProfile(userId:number, dto: UpdateUserDto, avatarFile: any) {
         try {
             let updateData

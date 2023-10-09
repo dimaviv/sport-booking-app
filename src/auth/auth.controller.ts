@@ -18,4 +18,13 @@ export class AuthController {
         res.redirect('/targetPage')
         return user
     }
+
+    @Get('/facebook/callback')
+    @UseGuards(AuthGuard('facebook'))
+    async facebookAuthRedirect(@Req() req, @Res() res) {
+
+        const user = await this.authService.facebookAuth(req, res)
+        res.redirect('/targetPage')
+        return user
+    }
 }

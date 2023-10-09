@@ -51,19 +51,28 @@ export class AuthService {
         if (!req.user) {
             return 'No user from google'
         }
-        console.log(req.user)
         let existUser = await this.userService.findByOAuthId(req.user.googleId)
 
         if (!existUser){
-           const newUser = await this.userService.createUserFromGoogleProfile(req.user);
-            console.log("New: ", newUser)
+           const newUser = await this.userService.createUserFromOAuthData(req.user);
            return this.issueTokens(newUser, res);
+        }
+        return this.issueTokens(existUser, res);
+    }
+    async facebookAuth(req, res){
+        if (!req.user) {
+            return 'No user from facebook'
+        }
+        console.log(req.user)
+        let existUser = await this.userService.findByOAuthId(req.user.facebookId)
+
+        if (!existUser){
+            const newUser = await this.userService.createUserFromOAuthData(req.user);
+            console.log("New: ", newUser)
+            return this.issueTokens(newUser, res);
         }
         console.log("existedUser: ", existUser)
         return this.issueTokens(existUser, res);
-    }
-    async facebookAuth(){
-
     }
 
     async login(loginDto: LoginDto, response: Response) {
