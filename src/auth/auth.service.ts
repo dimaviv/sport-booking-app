@@ -11,6 +11,7 @@ import {User} from "../user/user.type";
 import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {RolesService} from "../roles/roles.service";
+import {UserService} from "../user/user.service";
 
 
 @Injectable()
@@ -23,24 +24,57 @@ export class AuthService {
         private readonly roleService: RolesService,
         private readonly googleStrategy: GoogleStrategy,
         private readonly facebookStrategy: FacebookStrategy,
+        private readonly userService: UserService,
         ) {
     }
 
-    async validateOAuthUser(oauthUser: any, provider: 'google' | 'facebook') {
+    async validateOAuthUser(
+        accessToken: string,
+        refreshToken: string,
+        profile: any,
+        provider: 'google' | 'facebook',
+        response: Response,
+    ){
         if (provider === 'google') {
-            return this.googleStrategy.validate(oauthUser.accessToken, oauthUser.refreshToken, oauthUser.profile, this.googleAuth);
-        } else if (provider === 'facebook') {
-            return this.facebookStrategy.validate(oauthUser.accessToken, oauthUser.refreshToken, oauthUser.profile, this.facebookAuth);
+            const oauthUser = await this.googleStrategy.validate(accessToken, refreshToken, profile, this.googleAuth);
+            if (!oauthUser) throw new UnauthorizedException('Validating error');
+            return this.issueTokens(oauthUser, response)
+
+        } else {
+            console.log('facebook or else')
         }
 
         throw new UnauthorizedException('Invalid provider');
     }
-    async googleAuth(){
 
-    }
-    async facebookAuth(){
+    async googleAuth(req, res){
+        if (!req.user) {
+            return 'No user from google'
+        }
+        let existUser = await this.userService.findByOAuthId(req.user.googleId)
 
+        if (!existUser){
+           const newUser = await this.userService.createUserFromOAuthData(req.user);
+           return this.issueTokens(newUser, res);
+        }
+        return this.issueTokens(existUser, res);
     }
+    async facebookAuth(req, res){
+        if (!req.user) {
+            return 'No user from facebook'
+        }
+        console.log(req.user)
+        let existUser = await this.userService.findByOAuthId(req.user.facebookId)
+
+        if (!existUser){
+            const newUser = await this.userService.createUserFromOAuthData(req.user);
+            console.log("New: ", newUser)
+            return this.issueTokens(newUser, res);
+        }
+        console.log("existedUser: ", existUser)
+        return this.issueTokens(existUser, res);
+    }
+
     async login(loginDto: LoginDto, response: Response) {
         const user = await this.validateUser(loginDto);
 
@@ -52,12 +86,12 @@ export class AuthService {
         }
         return this.issueTokens(user, response);
     }
+
     async logout(response: Response){
         response.clearCookie('access_token');
         response.clearCookie('refresh_token');
         return 'Successfully logged out';
     }
-
 
     async registration(registerDto: RegisterDto, response: Response) {
         const candidate = await this.prisma.user.findUnique({

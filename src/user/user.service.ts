@@ -4,6 +4,7 @@ import {FilesService} from "../files/files.service";
 import {RolesService} from "../roles/roles.service";
 import {PrismaService} from "../prisma.service";
 import {InternalException} from "../../exceptions/validation.exception";
+import {User} from "./user.type";
 
 @Injectable()
 export class UserService {
@@ -13,9 +14,51 @@ export class UserService {
                 private readonly fileService: FilesService,
     ) {}
 
+    // OAuth
+    async findByOAuthId(oauthId: string) {
+        return this.prisma.user.findFirst({
+            where: {
+                OR: [
+                    {
+                        googleId: oauthId,
+                    },
+                    {
+                        facebookId: oauthId,
+                    },
+                ],
+            },
+            include: {roles:true}
+        });
+    }
+
+    async createUserFromOAuthData(profile: any): Promise<User> {
+        const {role} = await this.roleService.getRoleByValue('USER')
+        const userInput  = {
+            googleId: profile.googleId,
+            facebookId: profile.facebookId,
+            fullname: profile.fullname,
+            email: profile.email,
+            isActivated: true,
+            password: null,
+            activationLink: null,
+            roles: {
+                connect:{
+                    id: role.id
+                }
+            }
+        };
+
+        return await this.prisma.user.create({
+            data: {...userInput},
+            include: {
+                roles: true,
+            },
+        });
+}
+
+    // User profile
     async updateProfile(userId:number, dto: UpdateUserDto, avatarFile: any) {
         try {
-            console.log('Start')
             let updateData
             if (dto){
                  updateData = {...dto, avatar:undefined};

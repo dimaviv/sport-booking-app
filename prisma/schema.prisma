@@ -11,15 +11,14 @@ datasource db {
 }
 
 model Role {
-  id          Int            @id @default(autoincrement())
-  value       String         @unique
+  id          Int          @id @default(autoincrement())
+  value       String       @unique
   description String
   users       User[]
   UsersRoles  UsersRoles[]
 }
 
 model UsersRoles {
-
   userId Int
   roleId Int
   user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -29,46 +28,146 @@ model UsersRoles {
 }
 
 model User {
-  id             Int            @id @default(autoincrement())
+  id             Int          @id @default(autoincrement())
   fullname       String?
-  email          String         @unique
+  email          String       @unique
   dateOfBirth    DateTime?
-  password       String
+  password       String?
   roles          Role[]
   UsersRoles     UsersRoles[]
   avatar         String?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
-  activationLink String         @unique
-  isActivated    Boolean        @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  activationLink String?      @unique
+  isActivated    Boolean      @default(false)
+
+  // Fields to store OAuth data
+  googleId   String? @unique
+  facebookId String? @unique
 
   facilities Facility[]
 
-  bookings Booking[]
+  bookings  Booking[]
+  UserOwner UserOwner?
+  Rating    Rating[]
+}
+
+model UserOwner {
+  id               Int     @id @default(autoincrement())
+  phone            String
+  organizationName String?
+
+  // Add a foreign key to User
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
 }
 
 model Facility {
-  id          Int     @id @default(autoincrement())
-  name        String
-  description String?
-  ownerId     Int
+  id             Int           @id @default(autoincrement())
+  name           String
+  sportType      sport_type
+  coveringType   covering_type
+  facilityType   facility_type
+  description    String?
+  location       String
+  minBookingTime DateTime
+
+  ownerId Int
 
   owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
-  bookings Booking[]
+  bookings  Booking[]
+  ratings   Rating[] // Add a relation to Rating model
+  images    Image[] // Add a one-to-many relation to Image model
+  schedules Schedule[] // Add a one-to-many relation to Schedule model
+}
+
+model Image {
+  id         Int    @id @default(autoincrement())
+  image      String
+  facilityId Int
+
+  facility Facility @relation(fields: [facilityId], references: [id])
+}
+
+model Rating {
+  id    Int @id @default(autoincrement())
+  value Int // You can adjust the data type of 'value' as needed (e.g., Float for decimal ratings)
+
+  userId     Int // Reference to User model
+  facilityId Int // Reference to Facility model
+
+  user     User     @relation(fields: [userId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
 }
 
 model Booking {
-  id         Int      @id @default(autoincrement())
-  userId     Int
-  facilityId Int
-  startTime  DateTime
-  endTime    DateTime
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id     Int    @id @default(autoincrement())
+  userId Int
+  status String // You can adjust the data type as needed for the booking status
 
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
+  bookingSlots BookingSlot[] // Add a many-to-many relation to BookingSlot model
+  Facility     Facility?     @relation(fields: [facilityId], references: [id])
+  facilityId   Int?
+}
 
-  facility Facility @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+model BookingSlot {
+  id        Int @id @default(autoincrement())
+  bookingId Int
+  slotId    Int
 
+  booking Booking @relation(fields: [bookingId], references: [id])
+  slot    Slot    @relation(fields: [slotId], references: [id])
+}
+
+model Slot {
+  id          Int      @id @default(autoincrement())
+  scheduledId Int
+  startTime   DateTime
+  endTime     DateTime
+
+  schedule Schedule @relation(fields: [scheduledId], references: [id])
+
+  bookingSlots BookingSlot[]
+}
+
+model Schedule {
+  id           Int           @id @default(autoincrement())
+  facilityId   Int
+  dayOfWeek    Int // Assuming you use an integer to represent the day of the week
+  name         String
+  pricePerHour Float
+  facility     Facility      @relation(fields: [facilityId], references: [id])
+  slots        Slot[] // Add a one-to-many relation to Slot model
+  blockedSlots BlockedSlot[] // Add a one-to-many relation to BlockedSlot model
+}
+
+model BlockedSlot {
+  id          Int      @id @default(autoincrement())
+  schedule    Schedule @relation(fields: [scheduleId], references: [id])
+  scheduleId  Int
+  startTime   DateTime
+  endTime     DateTime
+  reason      String
+  isRecurring Boolean
+}
+
+enum sport_type {
+  basketball
+  soccer
+  tennis
+  volleyball
+}
+
+enum covering_type {
+  artificial_lawn
+  parquet
+  natural_lawn
+  rubber
+}
+
+enum facility_type {
+  indoor
+  outdoor
 }

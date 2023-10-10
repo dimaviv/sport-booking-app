@@ -36,9 +36,9 @@ import {GoogleStrategy} from "./auth/strategies/google.stategy";
       isGlobal: true,
       envFilePath: `.${process.env.NODE_ENV}.env`
     }),
-    ServeStaticModule.forRoot({
-      rootPath: path.resolve(__dirname, 'static'),
-    }),
+    // ServeStaticModule.forRoot({
+    //   rootPath: path.resolve(__dirname, 'static'),
+    // }),
     ],
   controllers: [],
   providers: [GoogleStrategy],

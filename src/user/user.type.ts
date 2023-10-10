@@ -14,7 +14,7 @@ export class User {
     email: string;
 
     @Field({nullable: true})
-    password: string;
+    password?: string;
 
     @Field({nullable: true})
     dateOfBirth: Date;
