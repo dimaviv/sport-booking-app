@@ -15,6 +15,10 @@ import {GoogleStrategy} from "./auth/strategies/google.stategy";
 
 @Module({
   imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule,
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: `.${process.env.NODE_ENV}.env`
+    }),
     GraphQLModule.forRootAsync({
       imports: [ConfigModule, AppModule],
       inject: [ConfigService],
@@ -32,15 +36,12 @@ import {GoogleStrategy} from "./auth/strategies/google.stategy";
       }
 
     }),
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: `.${process.env.NODE_ENV}.env`
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(__dirname, 'static'),
     }),
-    // ServeStaticModule.forRoot({
-    //   rootPath: path.resolve(__dirname, 'static'),
-    // }),
     ],
   controllers: [],
   providers: [GoogleStrategy],
 })
+
 export class AppModule {}
