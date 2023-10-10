@@ -11,6 +11,7 @@ import {ApolloDriver} from "@nestjs/apollo";
 import {MailModule} from "./mail/mail.module";
 import {FilesModule} from "./files/files.module";
 import {RolesModule} from "./roles/roles.module";
+import {GoogleStrategy} from "./auth/strategies/google.stategy";
 
 @Module({
   imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule,
@@ -40,6 +41,6 @@ import {RolesModule} from "./roles/roles.module";
     }),
     ],
   controllers: [],
-  providers: [],
+  providers: [GoogleStrategy],
 })
 export class AppModule {}
