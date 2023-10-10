@@ -28,24 +28,6 @@ export class AuthService {
         ) {
     }
 
-    async validateOAuthUser(
-        accessToken: string,
-        refreshToken: string,
-        profile: any,
-        provider: 'google' | 'facebook',
-        response: Response,
-    ){
-        if (provider === 'google') {
-            const oauthUser = await this.googleStrategy.validate(accessToken, refreshToken, profile, this.googleAuth);
-            if (!oauthUser) throw new UnauthorizedException('Validating error');
-            return this.issueTokens(oauthUser, response)
-
-        } else {
-            console.log('facebook or else')
-        }
-
-        throw new UnauthorizedException('Invalid provider');
-    }
 
     async googleAuth(req, res){
         if (!req.user) {

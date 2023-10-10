@@ -6,10 +6,6 @@ import {AuthService} from "./auth.service";
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
-    // @Get()
-    // @UseGuards(AuthGuard('google'))
-    // async googleAuth(@Req() req) { }
-
     @Get('/google/callback')
     @UseGuards(AuthGuard('google'))
     async googleAuthRedirect(@Req() req, @Res() res) {
