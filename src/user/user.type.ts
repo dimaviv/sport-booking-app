@@ -1,6 +1,21 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import {Role} from "../roles/role.type";
+import {Facility} from "../facility/facility.types";
 
+@ObjectType()
+export class UserOwner {
+    @Field({nullable: true})
+    id?: number;
+
+    @Field({nullable: true})
+    phone: string;
+
+    @Field({nullable: true})
+    organizationName: string;
+
+    @Field({nullable: true})
+    userId?: string;
+}
 
 @ObjectType()
 export class User {
@@ -19,7 +34,7 @@ export class User {
     @Field({nullable: true})
     dateOfBirth: Date;
 
-    @Field(() => [Role], {nullable: true})
+    @Field(() => [Role])
     roles?: Role[];
 
     @Field({nullable: true})
@@ -44,9 +59,14 @@ export class User {
     facebookId?: string;
 
 
-    // @Field(() => [Facility])
-    // facilities: Facility[];
+    @Field(() => [Facility], {nullable: true})
+    facilities?: Facility[];
+
+    @Field(() => UserOwner, {nullable: true})
+    userOwner?: UserOwner;
 
     // @Field(() => [Booking])
     // bookings: Booking[];
 }
+
+

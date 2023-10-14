@@ -16,5 +16,4 @@ export class UpdateUserDto {
     @MaxDate(new Date(), { message: 'Date of birth is in the future' })
     readonly dateOfBirth?: Date;
 
-
 }

@@ -148,8 +148,7 @@ export class AuthService {
     }
 
     private async issueTokens(user: User, response: Response) {
-
-        const payload = { id: user.id, email: user.email, isActivated: user.isActivated, roles: user.roles };
+        const payload = { id: user.id, email: user.email, isActivated: user.isActivated, roles: user.roles.map(role => role.value) };
         const accessToken = this.jwtService.sign(payload, {
             secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
             expiresIn: '150sec',

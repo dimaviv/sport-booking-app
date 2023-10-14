@@ -95,7 +95,9 @@ export class UserService {
         }
     }
 
-
+    async findUserById(id: number){
+        return this.prisma.user.findUnique({where: {id}})
+    }
 
     // async createUser(dto: CreateUserDto, activationLink: string){
     //     const user = await this.prisma.user.create({...dto, activationLink:activationLink});

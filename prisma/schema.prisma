@@ -64,17 +64,19 @@ model UserOwner {
 
 model Facility {
   id             Int           @id @default(autoincrement())
-  name           String
-  sportType      sport_type
-  coveringType   covering_type
-  facilityType   facility_type
+  name           String?
+  district       String?
+  address        String?
+  sportType      sport_type?
+  coveringType   covering_type?
+  facilityType   facility_type?
   description    String?
-  location       String
-  minBookingTime DateTime
+  location       String?
+  minBookingTime Int?
 
-  ownerId Int
+  ownerId        Int?
 
-  owner User @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner          User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   bookings  Booking[]
   ratings   Rating[] // Add a relation to Rating model

@@ -2,10 +2,78 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type BlockedSlot {
+  endTime: DateTime!
+  id: Float!
+  isRecurring: Boolean!
+  reason: String!
+  schedule: Schedule!
+  scheduleId: Float!
+  startTime: DateTime!
+}
+
+type Count {
+  ratings: Float!
+}
+
+input CreateFacilityInput {
+  address: String!
+  coveringType: covering_type!
+  description: String
+  district: String
+  facilityType: facility_type!
+  location: String
+  minBookingTime: Float
+  name: String!
+  sportType: sport_type!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
 scalar DateTime
+
+input FacilitiesFilterInput {
+  coveringType: String
+  district: String
+  facilityType: String
+  ownerId: Float
+  sortBy: String
+  sportType: String
+}
+
+type FacilitiesResponse {
+  facilities: [Facility!]!
+  totalCount: Float!
+}
+
+type Facility {
+  _count: Count
+  address: String!
+  avgRating: Float
+  coveringType: String!
+  description: String
+  district: String!
+  facilityType: String!
+  id: Float!
+  images: [Image!]
+  location: String
+  minBookingTime: Float
+  name: String!
+  owner: User!
+  ownerId: Float!
+  ratingCount: Float
+  ratings: [Rating!]
+  schedules: [Schedule!]
+  sportType: String!
+}
+
+type Image {
+  facility: Facility!
+  facilityId: Float!
+  id: Float!
+  image: String!
+}
 
 input LoginDto {
   email: String!
@@ -18,17 +86,36 @@ type LoginResponse {
 
 type Mutation {
   create(roleInput: RoleDto!): RoleResponse!
+  createFacility(createFacilityInput: CreateFacilityInput!): Facility!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   refreshToken: String!
   register(registerInput: RegisterDto!): RegisterResponse!
+  removeFacility(id: Int!): Facility!
+  updateFacility(updateFacilityInput: UpdateFacilityInput!): Facility!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
 }
 
+input PaginationArgs {
+  limit: Int!
+  page: Int!
+}
+
 type Query {
+  facility(id: Int!): Facility!
+  findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
   getByValue(name: String!): RoleResponse!
   getProfile: User!
   hello: String!
+}
+
+type Rating {
+  facility: Facility!
+  facilityId: Float!
+  id: Float!
+  user: User!
+  userId: Float!
+  value: String!
 }
 
 input RegisterDto {
@@ -57,6 +144,38 @@ type RoleResponse {
   role: Role!
 }
 
+type Schedule {
+  blockedSlots: [BlockedSlot!]!
+  dayOfWeek: Float!
+  facility: Facility!
+  facilityId: Float!
+  id: Float!
+  name: String!
+  pricePerHour: Float!
+  slots: [Slot!]!
+}
+
+type Slot {
+  endTime: DateTime!
+  id: Float!
+  schedule: Schedule!
+  scheduleId: Float!
+  startTime: DateTime!
+}
+
+input UpdateFacilityInput {
+  address: String
+  coveringType: covering_type
+  description: String
+  district: String
+  facilityType: facility_type
+  id: Float!
+  location: String
+  minBookingTime: Float
+  name: String
+  sportType: sport_type
+}
+
 input UpdateUserDto {
   dateOfBirth: DateTime!
   fullname: String!
@@ -72,11 +191,39 @@ type User {
   dateOfBirth: DateTime
   email: String
   facebookId: String
+  facilities: [Facility!]
   fullname: String
   googleId: String
   id: Float
   isActivated: Boolean
   password: String
-  roles: [Role!]
+  roles: [Role!]!
   updatedAt: DateTime
+  userOwner: UserOwner
+}
+
+type UserOwner {
+  id: Float
+  organizationName: String
+  phone: String
+  userId: String
+}
+
+enum covering_type {
+  artificial_lawn
+  natural_lawn
+  parquet
+  rubber
+}
+
+enum facility_type {
+  indoor
+  outdoor
+}
+
+enum sport_type {
+  basketball
+  soccer
+  tennis
+  volleyball
 }
