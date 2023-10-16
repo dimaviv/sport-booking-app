@@ -1,0 +1,49 @@
+version: '3.0'
+
+services:
+  postgres:
+    image: "postgres:latest"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=application_db
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - "5655:5432"
+    expose:
+      - "5655"
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./nginx
+    ports:
+      - "8000:80"
+  api:
+    build:
+      dockerfile: Dockerfile.dev
+      context: "./"
+    environment:
+      - POSTGRES_HOST=postgres
+    volumes:
+      - /app/node_modules
+      - ./:/app
+    env_file:
+      - /.development.env
+
+  client:
+    stdin_open: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    env_file:
+      - ./client/.development.env
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./client
+    volumes:
+      - /app/node_modules
+      - ./client:/app
