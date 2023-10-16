@@ -1,18 +1,17 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-import {sport_type, covering_type, facility_type } from "@prisma/client";
+import { ObjectType, Field } from '@nestjs/graphql';
 import {User} from "../user/user.type";
 import {IsInt} from "class-validator";
+import {Rating} from "../rating/rating.type";
 
 
 @ObjectType()
 export class Count {
   @Field()
-  ratings: number; // You can adjust the type according to your specific needs
+  ratings: number;
 }
 
 @ObjectType()
 export class Facility {
-  @IsInt()
   @Field()
   id: number;
 
@@ -55,17 +54,20 @@ export class Facility {
   @Field(() => [Image], {nullable: true})
   images?: Image[];
 
-  @Field(() => [Rating], {nullable: true})
+  @Field(() => [Rating], )
   ratings?: Rating[];
 
-  @Field(() => Count, { nullable: true })
+  @Field(() => Count, )
   _count?: Count;
 
-  @Field({ nullable: true })
+  @Field()
   ratingCount: number;
 
-  @Field({ nullable: true })
+  @Field()
   avgRating: number;
+
+  @Field(() => Rating, {nullable: true})
+  currentUserRate: Rating;
 }
 
 @ObjectType()
@@ -91,27 +93,6 @@ export class Image {
   @Field(() => Facility)
   facility: Facility;
 
-}
-
-@ObjectType()
-export class Rating {
-  @Field()
-  id?: number;
-
-  @Field()
-  value: string;
-
-  @Field()
-  userId: number;
-
-  @Field(() => User)
-  user: User;
-
-  @Field()
-  facilityId: number;
-
-  @Field(() => Facility)
-  facility: Facility;
 }
 
 @ObjectType()

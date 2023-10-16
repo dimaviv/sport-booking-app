@@ -11,9 +11,10 @@ import {FilesModule} from "./files/files.module";
 import {RolesModule} from "./roles/roles.module";
 import {GoogleStrategy} from "./auth/strategies/google.stategy";
 import { FacilityModule } from './facility/facility.module';
+import { RatingModule } from './rating/rating.module';
 
 @Module({
-  imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule, FacilityModule,
+  imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule,
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: `.${process.env.NODE_ENV}.env`
@@ -39,6 +40,7 @@ import { FacilityModule } from './facility/facility.module';
       rootPath: path.resolve(__dirname, 'static'),
     }),
     FacilityModule,
+    RatingModule,
     ],
   controllers: [],
   providers: [GoogleStrategy],

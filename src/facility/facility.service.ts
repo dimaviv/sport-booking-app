@@ -1,17 +1,18 @@
-import {BadRequestException, Injectable, UseGuards} from '@nestjs/common';
+import {BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
 import {CreateFacilityInput} from './dto/create-facility.input';
 import {UpdateFacilityInput} from './dto/update-facility.input';
 import {PrismaService} from "../prisma.service";
-import {RolesService} from "../roles/roles.service";
-import {FilesService} from "../files/files.service";
-import {UserService} from "../user/user.service";
 import {InternalException, UnauthorizedException} from "../../exceptions/validation.exception";
+import {RatingService} from "../rating/rating.service";
+import { mergeFacilitiesWithRating} from '../utils/arrayMerger'
 
 
 @Injectable()
 export class FacilityService {
   constructor(
       private readonly prisma: PrismaService,
+      @Inject(forwardRef(() => RatingService))
+      private readonly ratingService: RatingService,
   ) {}
 
   async create(createFacilityInput: CreateFacilityInput, userId: number) {
@@ -28,8 +29,10 @@ export class FacilityService {
 
   async update(id: number, updateFacilityInput: UpdateFacilityInput, userId: number) {
     try {
-      const facility = await this.prisma.facility.findUnique({where:{id}})
-      if (facility.ownerId !== userId) return new BadRequestException("User isn't the owner")
+
+      if (!await this.isOwner(id, userId)){
+        return new BadRequestException("User isn't the owner")
+      }
 
       return await this.prisma.facility.update({
         where:{id},
@@ -54,7 +57,6 @@ export class FacilityService {
         ...(ownerId && { ownerId }),
       };
 
-
       const [facilities, totalCount] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
           where,
@@ -74,32 +76,14 @@ export class FacilityService {
           skip: page * limit - limit,
           take: limit,
         }),
-        this.prisma.facility.count({ where })
+        this.prisma.facility.count({ where }),
       ]);
 
-      const aggregateRating = await this.prisma.rating.groupBy({
-        by: ['facilityId'],
-        _count: {
-          id: true,
-        },
-        _avg: {
-          value:true
-        },
-      })
+      const aggregateRating = await this.ratingService.aggregateRating()
 
-      const facilitiesWithRating = await Promise.all(
-          facilities.map(async (facility) => {
-            const facilityId = facility.id;
-            const matchedAggregate = aggregateRating.find((item) => item.facilityId === facilityId);
+      const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
 
-            return {
-              ...facility,
-              ratingCount: matchedAggregate?._count?.id || 0,
-              avgRating: matchedAggregate?._avg?.value || 0,
-            };
-          })
-      );
-      return {totalCount, facilities:facilitiesWithRating}
+      return {totalCount, facilities: facilitiesWithRating}
     } catch (e) {
       throw new InternalException(e.message);
     }
@@ -116,27 +100,20 @@ export class FacilityService {
           },
         },
       });
-      const aggregateRating = await this.prisma.rating.groupBy({
-        by: ['facilityId'],
-        where:{facilityId:facility.id},
-        _count: {
-          id: true,
-        },
-        _avg: {
-          value:true
-        },
-      })
+      const aggregateRating = await this.ratingService.aggregateRating(facility.id);
+      let userRate = null
+      if (userId) userRate = await this.ratingService.getUserRate(facility.id, userId)
+
       return  {
         ...facility,
         ratingCount: aggregateRating[0]?._count?.id || 0,
         avgRating: aggregateRating[0]?._avg?.value || 0,
+        currentUserRate: userRate,
       }
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
-
-
 
   async remove(id: number, userId) {
     try {
@@ -149,6 +126,11 @@ export class FacilityService {
     } catch (e) {
       throw new InternalException(e.message);
     }
-
   }
+
+  async isOwner(facilityId, userId){
+    const facility = await this.prisma.facility.findUnique({where:{id:facilityId}})
+    return facility.ownerId === userId
+  }
+
 }

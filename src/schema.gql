@@ -28,6 +28,11 @@ input CreateFacilityInput {
   sportType: sport_type!
 }
 
+input CreateRatingInput {
+  facilityId: Float!
+  value: Float!
+}
+
 """
 A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
 """
@@ -48,10 +53,11 @@ type FacilitiesResponse {
 }
 
 type Facility {
-  _count: Count
+  _count: Count!
   address: String!
-  avgRating: Float
+  avgRating: Float!
   coveringType: String!
+  currentUserRate: Rating
   description: String
   district: String!
   facilityType: String!
@@ -62,8 +68,8 @@ type Facility {
   name: String!
   owner: User!
   ownerId: Float!
-  ratingCount: Float
-  ratings: [Rating!]
+  ratingCount: Float!
+  ratings: [Rating!]!
   schedules: [Schedule!]
   sportType: String!
 }
@@ -87,13 +93,16 @@ type LoginResponse {
 type Mutation {
   create(roleInput: RoleDto!): RoleResponse!
   createFacility(createFacilityInput: CreateFacilityInput!): Facility!
+  createRating(createRatingInput: CreateRatingInput!): Rating!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   refreshToken: String!
   register(registerInput: RegisterDto!): RegisterResponse!
   removeFacility(id: Int!): Facility!
+  removeRating(facilityId: Int!): Rating!
   updateFacility(updateFacilityInput: UpdateFacilityInput!): Facility!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
+  updateRating(updateRatingInput: UpdateRatingInput!): Rating!
 }
 
 input PaginationArgs {
@@ -174,6 +183,11 @@ input UpdateFacilityInput {
   minBookingTime: Float
   name: String
   sportType: sport_type
+}
+
+input UpdateRatingInput {
+  id: Int!
+  value: Float!
 }
 
 input UpdateUserDto {
