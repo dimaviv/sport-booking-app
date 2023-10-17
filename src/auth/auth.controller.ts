@@ -11,7 +11,7 @@ export class AuthController {
     async googleAuthRedirect(@Req() req, @Res() res) {
 
         const user = await this.authService.googleAuth(req, res)
-        res.redirect('/targetPage')
+        res.redirect(process.env.APP_URL)
         return user
     }
 
@@ -20,7 +20,7 @@ export class AuthController {
     async facebookAuthRedirect(@Req() req, @Res() res) {
 
         const user = await this.authService.facebookAuth(req, res)
-        res.redirect('/targetPage')
+        res.redirect(process.env.APP_URL)
         return user
     }
 }
