@@ -13,3 +13,35 @@ services:
       - "5655:5432"
     expose:
       - "5655"
+  nginx:
+    depends_on:
+      - api
+      - client
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: ./nginx
+    ports:
+      - "9000:80"
+  api:
+    build:
+      dockerfile: Dockerfile
+      context: "./"
+    environment:
+      - POSTGRES_HOST=postgres
+    volumes:
+      - /app/node_modules
+      - :/app
+    env_file:
+      - ./server/.env
+
+  client:
+    stdin_open: true
+    env_file:
+      - ../client/.env
+    build:
+      dockerfile: Dockerfile
+      context: ../client
+    volumes:
+      - /app/node_modules
+      - ../client:/app
