@@ -31,10 +31,13 @@ services:
       - POSTGRES_HOST=postgres
     volumes:
       - /app/node_modules
+      - /app/prisma
       - ./:/app
     env_file:
       - ./.development.env
     restart: always
+    depends_on:
+      - postgres
   client:
     stdin_open: true
     environment:
@@ -47,3 +50,18 @@ services:
     volumes:
       - /app/node_modules
       - ../client:/app
+  prisma-studio:
+    container_name: prisma-studio
+    image: timothyjmiller/prisma-studio:latest
+    restart: unless-stopped
+    env_file:
+      - ./prisma/.env
+    environment:
+      - POSTGRES_URL=postgresql://postgres:postgres@postgres:5432/sport-booking-db
+    depends_on:
+      - postgres
+      - api
+    ports:
+      - '5555:5555'
+    expose:
+      - '5555'
