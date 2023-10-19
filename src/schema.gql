@@ -93,12 +93,12 @@ type LoginResponse {
 }
 
 type Mutation {
+  accessToken(refresh: String): String!
   create(roleInput: RoleDto!): RoleResponse!
   createFacility(createFacilityInput: CreateFacilityInput!): Facility!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
-  refreshToken: String!
   register(registerInput: RegisterDto!): RegisterResponse!
   removeFacility(id: Int!): Facility!
   removeRating(facilityId: Int!): Rating!

@@ -38,10 +38,12 @@ export class AuthResolver {
         return this.authService.logout(context.req.res)
     }
 
-    @Mutation(() => String)
-    async refreshToken(@Context() context: {req: Request, res: Response}){
+    @Mutation(() => String, { name: 'accessToken' })
+    async refreshToken(
+        @Args('refresh', {nullable: true}) refresh: string,
+        @Context() context: { req: Request, res: Response }){
         try {
-            return this.authService.refreshToken(context.res.req, context.res);
+            return this.authService.refreshToken(context.req, context.req.res, refresh);
         }catch (err){
             throw new BadRequestException(err.message);
         }
