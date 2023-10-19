@@ -101,6 +101,8 @@ model Rating {
 
   user     User     @relation(fields: [userId], references: [id])
   facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([userId, facilityId])
 }
 
 model Booking {
