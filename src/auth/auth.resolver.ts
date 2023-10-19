@@ -22,9 +22,7 @@ export class AuthResolver {
                 confirmPassword: 'Password and confirm password are not the same'
             })
         }
-
-        const {user} = await this.authService.registration(registerDto, context.req.res);
-        return {user}
+        return await this.authService.registration(registerDto, context.req.res);
     }
 
     @Mutation(() => LoginResponse)

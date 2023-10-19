@@ -16,8 +16,18 @@ export class GraphqlAuthGuard implements CanActivate{
     async canActivate(context:ExecutionContext): Promise<boolean>{
         const gqlCtx = context.getArgByIndex(2);
         const request: Request = gqlCtx.req;
-        const token = this.extractTokenFromCookie(request);
-        if (!token){
+        let token;
+
+        const authHeader = request.headers['authorization'];
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+            token = authHeader.slice(7);
+        }
+
+        if (!token) {
+            token = this.extractTokenFromCookie(request);
+        }
+
+        if (!token) {
             throw new UnauthorizedException();
         }
         try {
@@ -27,7 +37,6 @@ export class GraphqlAuthGuard implements CanActivate{
 
             request['user'] = payload;
         }catch (err){
-
             throw new UnauthorizedException()
         }
         return true;

@@ -87,6 +87,8 @@ input LoginDto {
 }
 
 type LoginResponse {
+  accessToken: String!
+  refreshToken: String!
   user: User!
 }
 
@@ -134,6 +136,8 @@ input RegisterDto {
 }
 
 type RegisterResponse {
+  accessToken: String
+  refreshToken: String
   user: User
 }
 

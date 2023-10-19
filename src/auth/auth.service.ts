@@ -160,7 +160,7 @@ export class AuthService {
 
         response.cookie('access_token', accessToken, {httpOnly:true} )
         response.cookie('refresh_token', refreshToken, {httpOnly:true})
-        return { user }
+        return { user, accessToken, refreshToken }
     }
 
     private async validateUser(loginDto: LoginDto) {
