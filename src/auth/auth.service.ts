@@ -151,7 +151,7 @@ export class AuthService {
         const payload = { id: user.id, email: user.email, isActivated: user.isActivated, roles: user.roles.map(role => role.value) };
         const accessToken = this.jwtService.sign(payload, {
             secret: this.configService.get<string>('ACCESS_TOKEN_SECRET'),
-            expiresIn: '150sec',
+            expiresIn: '1d',
         })
         const refreshToken = this.jwtService.sign(payload, {
             secret: this.configService.get<string>('REFRESH_TOKEN_SECRET'),
