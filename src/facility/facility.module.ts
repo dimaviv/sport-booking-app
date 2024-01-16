@@ -8,12 +8,14 @@ import {RolesService} from "../roles/roles.service";
 import {ConfigService} from "@nestjs/config";
 import {JwtService} from "@nestjs/jwt";
 import {RatingService} from "../rating/rating.service";
+import {FilesModule} from "../files/files.module";
+import {RatingModule} from "../rating/rating.module";
 
 
 @Module({
   providers: [FacilityResolver, FacilityService, PrismaService,
-    UserService, FilesService, RolesService, ConfigService,
-    JwtService, RatingService],
+    UserService, FilesService, FilesModule, RolesService, ConfigService,
+    JwtService, RatingService, RatingModule],
 
 })
 export class FacilityModule {}

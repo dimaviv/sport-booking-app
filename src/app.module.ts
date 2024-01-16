@@ -38,8 +38,6 @@ interface CustomError extends Error {
         return {
           formatError: (error: GraphQLError) => {
             const originalError = error.extensions?.originalError as CustomError;
-            console.log(originalError)
-            console.log(error)
             if (!originalError) {
               return {
                 message: error.message,

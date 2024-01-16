@@ -65,18 +65,15 @@ export class UserService {
             }
 
             if (avatarFile) {
-                const fileName = await this.fileService.saveAvatar(avatarFile);
-                updateData.avatar = fileName
+                updateData.avatar = await this.fileService.saveAvatar(avatarFile)
             }
 
-            const user = await this.prisma.user.update({
+            return await this.prisma.user.update({
                 where: {id: userId},
-                data:{
+                data: {
                     ...updateData
                 }
-            });
-
-            return user
+            })
         } catch (err) {
             throw new InternalException(err.message);
         }

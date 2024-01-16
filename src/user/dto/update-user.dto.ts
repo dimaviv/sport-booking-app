@@ -9,11 +9,11 @@ export class UpdateUserDto {
     @Length(6, 20, {message:"Must contain 6 - 20 symbols"})
     readonly fullname?:string;
 
-    @Field()
+    @Field({nullable:true})
     @IsOptional()
     @IsDate({ message: 'Invalid date format' })
     @MinDate(new Date('1900-01-01'), { message: 'Date of birth is too early' })
     @MaxDate(new Date(), { message: 'Date of birth is in the future' })
-    readonly dateOfBirth?: Date;
+    readonly dateOfBirth?: string;
 
 }

@@ -98,10 +98,11 @@ type Facility {
 }
 
 type Image {
-  facility: Facility!
+  facility: Facility
   facilityId: Float!
   id: Float!
   image: String!
+  isMain: Boolean
 }
 
 input LoginDto {
@@ -119,7 +120,7 @@ type Mutation {
   accessToken(refresh: String): String!
   create(roleInput: RoleDto!): RoleResponse!
   createBooking(createBookingInput: CreateBookingInput!): Booking!
-  createFacility(createFacilityInput: CreateFacilityInput!): Facility!
+  createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): Facility!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
@@ -128,9 +129,10 @@ type Mutation {
   removeFacility(id: Int!): Facility!
   removeRating(facilityId: Int!): Rating!
   updateBooking(updateBookingInput: UpdateBookingInput!): Booking!
-  updateFacility(updateFacilityInput: UpdateFacilityInput!): Facility!
+  updateFacility(photo: Upload, updateFacilityInput: UpdateFacilityInput): UpdateFacilityResponse!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
+  uploadFacilityPhotos(facilityId: Float!, photos: Upload!): Facility!
 }
 
 input PaginationArgs {
@@ -222,13 +224,18 @@ input UpdateFacilityInput {
   sportType: sport_type
 }
 
+type UpdateFacilityResponse {
+  facility: Facility!
+  photo: Image
+}
+
 input UpdateRatingInput {
   id: Int!
   value: Float!
 }
 
 input UpdateUserDto {
-  dateOfBirth: DateTime!
+  dateOfBirth: String
   fullname: String!
 }
 

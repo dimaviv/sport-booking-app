@@ -89,7 +89,7 @@ model Image {
   id         Int    @id @default(autoincrement())
   image      String
   facilityId Int
-
+  isMain     Boolean @default(false)
   facility Facility @relation(fields: [facilityId], references: [id])
 }
 

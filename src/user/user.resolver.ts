@@ -31,6 +31,7 @@ export class UserResolver {
             avatar: GraphQLUpload.FileUpload,
         @Context() context: {req: Request},
     ){
+        console.log(updateUserDto)
         const userId = context.req.user.id;
         return await this.userService.updateProfile(userId, updateUserDto, avatar)
     }

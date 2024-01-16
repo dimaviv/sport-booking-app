@@ -70,14 +70,6 @@ export class Facility {
   currentUserRate: Rating;
 }
 
-@ObjectType()
-export class FacilitiesResponse {
-  @Field(() => [Facility])
-  facilities: Facility[];
-
-  @Field()
-  totalCount: number;
-}
 
 @ObjectType()
 export class Image {
@@ -90,10 +82,33 @@ export class Image {
   @Field()
   facilityId: number;
 
+  @Field({nullable:true})
+  isMain: boolean;
+
+  @Field(() => Facility, {nullable: true})
+  facility?: Facility;
+
+}
+
+@ObjectType()
+export class FacilitiesResponse {
+  @Field(() => [Facility])
+  facilities: Facility[];
+
+  @Field()
+  totalCount: number;
+}
+
+@ObjectType()
+export class UpdateFacilityResponse {
   @Field(() => Facility)
   facility: Facility;
 
+  @Field(() => Image, {nullable:true})
+  photo?: Image
 }
+
+
 
 @ObjectType()
 export class Schedule {

@@ -58,6 +58,47 @@ export class FilesService {
         }
     }
 
+    async uploadFile(file): Promise<string>{
+        try {
+            await this.checkFileSize(file);
+
+            const { createReadStream } = await file;
+            const readStream = createReadStream();
+
+            const buffer = await this.streamToBuffer(readStream);
+
+            const fileName = `${uuid.v4()}.${file.filename.split('.').pop()}`;
+            const filePath = path.resolve(__dirname, '..', 'static');
+
+            if (!fs.existsSync(filePath)) {
+                fs.mkdirSync(filePath, { recursive: true });
+            }
+
+            const writeStream = createWriteStream(path.join(filePath, fileName));
+            writeStream.write(buffer);
+            writeStream.end();
+
+            return fileName;
+        } catch (e) {
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+    async uploadMultipleFiles(files): Promise<string[]>{
+        try {
+            const fileNames: string[] = [];
+
+            for (const file of files) {
+                const fileName = await this.uploadFile(file);
+                fileNames.push(fileName);
+            }
+
+            return fileNames;
+        } catch (e) {
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
     async streamToBuffer(readStream: NodeJS.ReadableStream): Promise<Buffer> {
         return new Promise<Buffer>((resolve, reject) => {
             const chunks: Buffer[] = [];
@@ -73,9 +114,5 @@ export class FilesService {
             throw new HttpException('File size is too big', HttpStatus.BAD_REQUEST)
         }
     };
-
-
-
-
 
 }

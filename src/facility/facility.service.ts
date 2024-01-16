@@ -1,10 +1,12 @@
-import {BadRequestException, forwardRef, Inject, Injectable } from '@nestjs/common';
+import {BadRequestException, forwardRef, Inject, Injectable} from '@nestjs/common';
 import {CreateFacilityInput} from './dto/create-facility.input';
 import {UpdateFacilityInput} from './dto/update-facility.input';
 import {PrismaService} from "../prisma.service";
 import {InternalException, UnauthorizedException} from "../../exceptions/validation.exception";
 import {RatingService} from "../rating/rating.service";
-import { mergeFacilitiesWithRating} from '../utils/arrayMerger'
+import {mergeFacilitiesWithRating} from '../utils/arrayMerger'
+import {FilesService} from "../files/files.service";
+import {Image} from "./facility.types";
 
 
 @Injectable()
@@ -13,32 +15,95 @@ export class FacilityService {
       private readonly prisma: PrismaService,
       @Inject(forwardRef(() => RatingService))
       private readonly ratingService: RatingService,
+      private readonly fileService: FilesService,
   ) {}
 
-  async create(createFacilityInput: CreateFacilityInput, userId: number) {
+  async uploadFacilityPhotos(facilityId: number, userId: number, imageFiles: any[]): Promise<Image[]> {
+    if (!await this.isOwner(facilityId, userId)){
+      throw new BadRequestException("User isn't the owner")
+    }
     try {
-      return await this.prisma.facility.create({
-        data: {
-          ...createFacilityInput,
-          ownerId:userId
-        }})
+      return await this.prisma.$transaction(async (prisma) => {
+        const imageNames = await this.fileService.uploadMultipleFiles(imageFiles);
+        return await Promise.all(imageNames.map(imageName => {
+          return prisma.image.create({
+            data: {
+              image: imageName,
+              facilityId: facilityId,
+            }
+          });
+        }));
+      });
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
 
-  async update(id: number, updateFacilityInput: UpdateFacilityInput, userId: number) {
+
+  async create(createFacilityInput: CreateFacilityInput, userId: number, photoFile: any = null) {
+    try {
+      let photoName;
+      if (photoFile) {
+         photoName = await this.fileService.uploadFile(photoFile)
+      }
+
+      return await this.prisma.$transaction(async (prisma) => {
+        const facility = await prisma.facility.create({
+          data: {
+            ...createFacilityInput,
+            ownerId: userId
+          }
+        });
+
+        if (photoName) {
+          await prisma.image.create({
+            data: {
+              image: photoName,
+              facilityId: facility.id,
+              isMain: true
+            }
+          });
+        }
+      });
+
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
+  async update(id: number, updateFacilityInput: UpdateFacilityInput, userId: number, photoFile: any = null) {
     try {
 
       if (!await this.isOwner(id, userId)){
         return new BadRequestException("User isn't the owner")
       }
 
-      return await this.prisma.facility.update({
-        where:{id},
-        data: {
-          ...updateFacilityInput
-        }});
+      let photoName;
+      if (photoFile) photoName = await this.fileService.uploadFile(photoFile)
+
+      return await this.prisma.$transaction(async (prisma) => {
+        const updatedFacility = await this.prisma.facility.update({
+          where:{id},
+          data: {
+            ...updateFacilityInput
+          }});
+
+        if (photoName) {
+          await prisma.image.findFirst({
+            where:{
+              facilityId: updatedFacility.id,
+              isMain: true
+            }
+          })
+          await prisma.image.create({
+            data: {
+              image: photoName,
+              facilityId: updatedFacility.id,
+              isMain: true
+            }
+          });
+        }
+      });
     } catch (e) {
       throw new InternalException(e.message);
     }
@@ -62,7 +127,7 @@ export class FacilityService {
           where,
           include: {
             images: {
-              take: 1
+              where:{ isMain:true }
             },
             _count: {
               select: { ratings: true },
