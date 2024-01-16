@@ -30,13 +30,11 @@ export class RegisterDto {
     @Field()
     @IsNotEmpty( {message: 'Password is required'})
     @IsString({message: "Must be string"})
-    @Length(6, 16, {message:"Must contain 6 - 16 symbols"})
+    @Length(6, 16, {message:"Password must contain 6 - 16 symbols"})
     readonly password:string;
 
     @Field()
     @IsNotEmpty( {message: 'Confirm Password is required'})
-    @IsString({message: "Must be string"})
-    @Length(6, 16, {message:"Must contain 6 - 16 symbols"})
     readonly confirmPassword:string;
 }
 
@@ -53,7 +51,6 @@ export class LoginDto {
     @Field()
     @IsNotEmpty( {message: 'Password is required'})
     @IsString({message: "Must be string"})
-    @Length(6, 16, {message:"Must contain 6 - 16 symbols"})
     readonly password:string;
 }
 

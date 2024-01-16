@@ -4,6 +4,7 @@ import {LoginResponse, RegisterResponse} from "./types";
 import {LoginDto, RegisterDto} from "./dto";
 import {BadRequestException} from "@nestjs/common";
 import {Response, Request} from "express";
+import {GraphQLError} from "graphql/index";
 
 
 @Resolver()
@@ -17,10 +18,11 @@ export class AuthResolver {
     async register(
         @Args('registerInput') registerDto: RegisterDto,
         @Context() context: { req: Request, res: Response }) {
+
         if (registerDto.password !== registerDto.confirmPassword) {
-            throw new BadRequestException({
-                confirmPassword: 'Password and confirm password are not the same'
-            })
+            throw new BadRequestException(
+                'Password and confirm password are not the same'
+            )
         }
         return await this.authService.registration(registerDto, context.req.res);
     }

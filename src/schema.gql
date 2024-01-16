@@ -12,8 +12,31 @@ type BlockedSlot {
   startTime: DateTime!
 }
 
+type Booking {
+  bookingSlots: [BookingSlot!]!
+  facility: Facility
+  facilityId: Int
+  id: Int!
+  status: String!
+  user: User!
+  userId: Int!
+}
+
+type BookingSlot {
+  booking: Booking!
+  bookingId: Int!
+  id: Int!
+  slot: Slot!
+  slotId: Int!
+}
+
 type Count {
   ratings: Float!
+}
+
+input CreateBookingInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
 }
 
 input CreateFacilityInput {
@@ -95,13 +118,16 @@ type LoginResponse {
 type Mutation {
   accessToken(refresh: String): String!
   create(roleInput: RoleDto!): RoleResponse!
+  createBooking(createBookingInput: CreateBookingInput!): Booking!
   createFacility(createFacilityInput: CreateFacilityInput!): Facility!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   register(registerInput: RegisterDto!): RegisterResponse!
+  removeBooking(id: Int!): Booking!
   removeFacility(id: Int!): Facility!
   removeRating(facilityId: Int!): Rating!
+  updateBooking(updateBookingInput: UpdateBookingInput!): Booking!
   updateFacility(updateFacilityInput: UpdateFacilityInput!): Facility!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
@@ -113,6 +139,7 @@ input PaginationArgs {
 }
 
 type Query {
+  booking(id: Int!): Booking!
   facility(id: Int!): Facility!
   findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
   getByValue(name: String!): RoleResponse!
@@ -174,6 +201,12 @@ type Slot {
   schedule: Schedule!
   scheduleId: Float!
   startTime: DateTime!
+}
+
+input UpdateBookingInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
 }
 
 input UpdateFacilityInput {

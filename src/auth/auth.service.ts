@@ -12,6 +12,7 @@ import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {RolesService} from "../roles/roles.service";
 import {UserService} from "../user/user.service";
+import {GraphQLError} from "graphql/index";
 
 
 @Injectable()
@@ -80,10 +81,7 @@ export class AuthService {
             where: {email: registerDto.email}
         });
         if (candidate) {
-            throw new HttpException(
-                "Email already in use",
-                HttpStatus.BAD_REQUEST
-            );
+            throw new BadRequestException("Email already in use");
         }
         const hashPassword = await bcrypt.hash(registerDto.password, 10);
         const activationLink =  await uuidv4()
@@ -95,7 +93,7 @@ export class AuthService {
                 email: registerDto.email,
                 password: hashPassword,
                 activationLink,
-                avatar:'null',
+                avatar: null,
                 roles: {
                     connect:{
                         id: role.id
@@ -164,11 +162,13 @@ export class AuthService {
     }
 
     private async validateUser(loginDto: LoginDto) {
+
         const user = await this.prisma.user.findUnique({
             where: { email: loginDto.email},
             include: {roles:true}
         });
 
+       if (!user) throw new BadRequestException("Incorrect email or password");
 
         const passwordEquals = await bcrypt.compare(
             loginDto.password,
@@ -177,6 +177,6 @@ export class AuthService {
         if (user && passwordEquals) {
             return user;
         }
-        throw new UnauthorizedException({ message: "Incorrect email or password" });
+        throw new UnauthorizedException( "Incorrect email or password");
     }
 }

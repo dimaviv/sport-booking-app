@@ -79,9 +79,10 @@ model Facility {
   owner          User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   bookings  Booking[]
-  ratings   Rating[] // Add a relation to Rating model
-  images    Image[] // Add a one-to-many relation to Image model
-  schedules Schedule[] // Add a one-to-many relation to Schedule model
+  blockings Blocking[]
+  ratings   Rating[]
+  images    Image[]
+  schedules Schedule[]
 }
 
 model Image {
@@ -106,55 +107,37 @@ model Rating {
 }
 
 model Booking {
-  id     Int    @id @default(autoincrement())
-  userId Int
-  status String // You can adjust the data type as needed for the booking status
+  id        Int    @id @default(autoincrement())
+  startTime DateTime
+  endTime   DateTime
+  userId    Int
+  status    String?
+  price     Float?
 
   user         User          @relation(fields: [userId], references: [id])
-  bookingSlots BookingSlot[] // Add a many-to-many relation to BookingSlot model
-  Facility     Facility?     @relation(fields: [facilityId], references: [id])
-  facilityId   Int?
-}
-
-model BookingSlot {
-  id        Int @id @default(autoincrement())
-  bookingId Int
-  slotId    Int
-
-  booking Booking @relation(fields: [bookingId], references: [id])
-  slot    Slot    @relation(fields: [slotId], references: [id])
-}
-
-model Slot {
-  id          Int      @id @default(autoincrement())
-  scheduledId Int
-  startTime   DateTime
-  endTime     DateTime
-
-  schedule Schedule @relation(fields: [scheduledId], references: [id])
-
-  bookingSlots BookingSlot[]
+  facility     Facility     @relation(fields: [facilityId], references: [id])
+  facilityId   Int
 }
 
 model Schedule {
   id           Int           @id @default(autoincrement())
   facilityId   Int
-  dayOfWeek    Int // Assuming you use an integer to represent the day of the week
+  dayOfWeek    Int
   name         String
   pricePerHour Float
+
   facility     Facility      @relation(fields: [facilityId], references: [id])
-  slots        Slot[] // Add a one-to-many relation to Slot model
-  blockedSlots BlockedSlot[] // Add a one-to-many relation to BlockedSlot model
 }
 
-model BlockedSlot {
+model Blocking {
   id          Int      @id @default(autoincrement())
-  schedule    Schedule @relation(fields: [scheduleId], references: [id])
-  scheduleId  Int
+  facilityId  Int
   startTime   DateTime
   endTime     DateTime
   reason      String
   isRecurring Boolean
+
+  facility    Facility      @relation(fields: [facilityId], references: [id])
 }
 
 enum sport_type {

@@ -118,7 +118,7 @@ export class FacilityService {
   async remove(id: number, userId) {
     try {
       const facility = await this.prisma.facility.findUnique({where:{id}, select: {id:true, ownerId: true}})
-      if (userId !== facility.ownerId) return  new UnauthorizedException("User is not the owner")
+      if (userId !== facility.ownerId) return new UnauthorizedException("User is not the owner")
 
       return await this.prisma.facility.delete({
         where: {id},
