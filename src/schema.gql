@@ -2,22 +2,13 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type BlockedSlot {
-  endTime: DateTime!
-  id: Float!
-  isRecurring: Boolean!
-  reason: String!
-  schedule: Schedule!
-  scheduleId: Float!
-  startTime: DateTime!
-}
-
 type Booking {
   bookingSlots: [BookingSlot!]!
-  facility: Facility
-  facilityId: Int
+  facility: Facility!
+  facilityId: Int!
   id: Int!
-  status: String!
+  price: Float
+  status: String
   user: User!
   userId: Int!
 }
@@ -26,8 +17,8 @@ type BookingSlot {
   booking: Booking!
   bookingId: Int!
   id: Int!
-  slot: Slot!
-  slotId: Int!
+  timeSlot: TimeSlot!
+  timeSlotId: Int!
 }
 
 type Count {
@@ -35,8 +26,8 @@ type Count {
 }
 
 input CreateBookingInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  facilityId: Int!
+  timeSlotIds: [Int!]!
 }
 
 input CreateFacilityInput {
@@ -54,6 +45,14 @@ input CreateFacilityInput {
 input CreateRatingInput {
   facilityId: Float!
   value: Float!
+}
+
+input CreateScheduleInput {
+  daysOfWeek: [Int!]!
+  endTime: String!
+  facilityId: Float!
+  price: Float!
+  startTime: String!
 }
 
 """
@@ -79,6 +78,7 @@ type Facility {
   _count: Count!
   address: String!
   avgRating: Float!
+  bookings: [Booking!]!
   coveringType: String!
   currentUserRate: Rating
   description: String
@@ -93,8 +93,8 @@ type Facility {
   ownerId: Float!
   ratingCount: Float!
   ratings: [Rating!]!
-  schedules: [Schedule!]
   sportType: String!
+  timeSlots: [TimeSlot!]!
 }
 
 type Image {
@@ -122,16 +122,17 @@ type Mutation {
   createBooking(createBookingInput: CreateBookingInput!): Booking!
   createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): Facility!
   createRating(createRatingInput: CreateRatingInput!): Rating!
+  createSchedule(createScheduleInput: CreateScheduleInput!): [TimeSlot!]!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   register(registerInput: RegisterDto!): RegisterResponse!
-  removeBooking(id: Int!): Booking!
   removeFacility(id: Int!): Facility!
   removeRating(facilityId: Int!): Rating!
   updateBooking(updateBookingInput: UpdateBookingInput!): Booking!
   updateFacility(photo: Upload, updateFacilityInput: UpdateFacilityInput): UpdateFacilityResponse!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
+  updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput): [TimeSlot!]!
   uploadFacilityPhotos(facilityId: Float!, photos: Upload!): Facility!
 }
 
@@ -141,7 +142,6 @@ input PaginationArgs {
 }
 
 type Query {
-  booking(id: Int!): Booking!
   facility(id: Int!): Facility!
   findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
   getByValue(name: String!): RoleResponse!
@@ -186,29 +186,28 @@ type RoleResponse {
   role: Role!
 }
 
-type Schedule {
-  blockedSlots: [BlockedSlot!]!
-  dayOfWeek: Float!
+type TimeSlot {
+  dayOfWeek: Int!
+  endTime: DateTime!
   facility: Facility!
-  facilityId: Float!
-  id: Float!
-  name: String!
-  pricePerHour: Float!
-  slots: [Slot!]!
+  facilityId: Int!
+  id: Int!
+  price: Float!
+  startTime: DateTime!
+  status: String!
+  temporaryBlockDate: DateTime!
 }
 
-type Slot {
-  endTime: DateTime!
-  id: Float!
-  schedule: Schedule!
-  scheduleId: Float!
-  startTime: DateTime!
+enum TimeSlotStatus {
+  available
+  booked
+  unavailable
 }
 
 input UpdateBookingInput {
-  """Example field (placeholder)"""
-  exampleField: Int
+  facilityId: Int
   id: Int!
+  timeSlotIds: [Int!]
 }
 
 input UpdateFacilityInput {
@@ -234,9 +233,16 @@ input UpdateRatingInput {
   value: Float!
 }
 
+input UpdateTimeSlotsInput {
+  price: Float
+  status: TimeSlotStatus
+  temporaryBlockDate: DateTime
+  timeSlotIds: [Int!]!
+}
+
 input UpdateUserDto {
   dateOfBirth: String
-  fullname: String!
+  fullname: String
 }
 
 """The `Upload` scalar type represents a file upload."""

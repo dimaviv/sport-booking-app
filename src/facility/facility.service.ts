@@ -7,6 +7,8 @@ import {RatingService} from "../rating/rating.service";
 import {mergeFacilitiesWithRating} from '../utils/arrayMerger'
 import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
+import {CreateScheduleInput} from "./dto/create-schedule.input";
+import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 
 
 @Injectable()
@@ -17,6 +19,93 @@ export class FacilityService {
       private readonly ratingService: RatingService,
       private readonly fileService: FilesService,
   ) {}
+
+
+  async updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput, userId: number) {
+    try {
+      let { timeSlotIds, ...slotsData } = updateTimeSlotsInput;
+
+      return await this.prisma.$transaction(async (prisma) => {
+        await prisma.timeSlot.updateMany({
+          where: {
+            id: {
+              in: timeSlotIds
+            }
+          },
+          data: slotsData
+        });
+
+        return prisma.timeSlot.findMany({
+          where: {
+            id: { in: timeSlotIds }
+          },
+        });
+      });
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
+
+
+  async createSchedule(createScheduleInput: CreateScheduleInput, userId: number) {
+    const { facilityId, daysOfWeek, price, startTime, endTime } = createScheduleInput;
+
+    if (!await this.isOwner(facilityId, userId)){
+      throw new BadRequestException("User isn't the owner");
+    }
+
+    try {
+      const slots = this.generateTimeSlots(startTime, endTime, daysOfWeek);
+
+      return await this.prisma.$transaction(async (prisma) => {
+        await prisma.timeSlot.deleteMany({
+          where: {
+            facilityId: facilityId,
+          },
+        });
+
+        await prisma.timeSlot.createMany({
+          data: slots.map(slot => ({
+            facilityId,
+            price,
+            dayOfWeek: slot.dayOfWeek,
+            startTime: slot.start,
+            endTime: slot.end,
+          })),
+        });
+
+        return prisma.timeSlot.findMany({
+          where: {
+            facilityId: facilityId,
+          },
+        });
+      });
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
+
+
+  private generateTimeSlots(startTime: string, endTime: string, daysOfWeek: number[]) {
+    const slots = [];
+
+    daysOfWeek.forEach(dayOfWeek => {
+      const start = new Date(`1970-01-01T${startTime}:00.000Z`);
+      const end = new Date(`1970-01-01T${endTime}:00.000Z`);
+
+      while (start < end) {
+        const slotEnd = new Date(start.getTime() + 30 * 60000); // Add 30 minutes
+        slots.push({ dayOfWeek, start: new Date(start), end: slotEnd });
+
+        start.setTime(slotEnd.getTime());
+      }
+    });
+
+    return slots;
+  }
+
 
   async uploadFacilityPhotos(facilityId: number, userId: number, imageFiles: any[]): Promise<Image[]> {
     if (!await this.isOwner(facilityId, userId)){
@@ -64,7 +153,9 @@ export class FacilityService {
             }
           });
         }
+        return facility;
       });
+
 
     } catch (e) {
       throw new InternalException(e.message);
@@ -195,6 +286,7 @@ export class FacilityService {
 
   async isOwner(facilityId, userId){
     const facility = await this.prisma.facility.findUnique({where:{id:facilityId}})
+    if(!facility) throw Error('Facility not found')
     return facility.ownerId === userId
   }
 

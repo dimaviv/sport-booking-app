@@ -1,7 +1,8 @@
-import { ObjectType, Field } from '@nestjs/graphql';
+import {ObjectType, Field, Int, Float} from '@nestjs/graphql';
 import {User} from "../user/user.type";
 import {IsInt} from "class-validator";
 import {Rating} from "../rating/rating.type";
+import {Booking, BookingSlot} from "../booking/booking.types";
 
 
 @ObjectType()
@@ -48,9 +49,6 @@ export class Facility {
   @Field(() => User)
   owner: User;
 
-  @Field(() => [Schedule], {nullable: true})
-  schedules?: Schedule[];
-
   @Field(() => [Image], {nullable: true})
   images?: Image[];
 
@@ -68,8 +66,43 @@ export class Facility {
 
   @Field(() => Rating, {nullable: true})
   currentUserRate: Rating;
+
+  @Field(() => [TimeSlot])
+  timeSlots: TimeSlot[];
+
+  @Field(() => [Booking])
+  bookings: Booking[];
 }
 
+@ObjectType()
+export class TimeSlot {
+  @Field(() => Int)
+  id: number;
+
+  @Field(() => Int)
+  facilityId: number;
+
+  @Field(() => Int)
+  dayOfWeek: number;
+
+  @Field()
+  startTime: Date;
+
+  @Field()
+  endTime: Date;
+
+  @Field(() => Float)
+  price: number;
+
+  @Field()
+  status?: string;
+
+  @Field(() => Facility)
+  facility: Facility;
+
+  @Field()
+  temporaryBlockDate: Date;
+}
 
 @ObjectType()
 export class Image {
@@ -108,76 +141,3 @@ export class UpdateFacilityResponse {
   photo?: Image
 }
 
-
-
-@ObjectType()
-export class Schedule {
-  @Field()
-  id?: number;
-
-  @Field()
-  facilityId: number;
-
-  @Field()
-  dayOfWeek: number;
-
-  @Field()
-  name: string;
-
-  @Field()
-  pricePerHour: number;
-
-  @Field(() => Facility)
-  facility: Facility;
-
-  @Field(() => [Slot])
-  slots: Slot[];
-
-  @Field(() => [BlockedSlot])
-  blockedSlots: BlockedSlot[];
-}
-
-@ObjectType()
-export class Slot {
-  @Field()
-  id?: number;
-
-  @Field()
-  scheduleId: number;
-
-  @Field()
-  startTime: Date;
-
-  @Field()
-  endTime: Date;
-
-  @Field(() => Schedule)
-  schedule: Schedule;
-
-  // @Field(() => [BookingSlot])
-  // bookingSlots: BookingSlot[];
-}
-
-@ObjectType()
-export class BlockedSlot {
-  @Field()
-  id?: number;
-
-  @Field(() => Schedule)
-  schedule: Schedule;
-
-  @Field()
-  scheduleId: number;
-
-  @Field()
-  startTime: Date;
-
-  @Field()
-  endTime: Date;
-
-  @Field()
-  reason: string;
-
-  @Field()
-  isRecurring: boolean;
-}

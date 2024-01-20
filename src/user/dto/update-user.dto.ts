@@ -3,7 +3,7 @@ import {Field, InputType} from "@nestjs/graphql";
 
 @InputType()
 export class UpdateUserDto {
-    @Field()
+    @Field({ nullable: true })
     @IsOptional()
     @IsString({message: "Must be string"})
     @Length(6, 20, {message:"Must contain 6 - 20 symbols"})
@@ -11,9 +11,9 @@ export class UpdateUserDto {
 
     @Field({nullable:true})
     @IsOptional()
-    @IsDate({ message: 'Invalid date format' })
-    @MinDate(new Date('1900-01-01'), { message: 'Date of birth is too early' })
-    @MaxDate(new Date(), { message: 'Date of birth is in the future' })
+    // @IsDate({ message: 'Invalid date format' })
+    // @MinDate(new Date('1900-01-01'), { message: 'Date of birth is too early' })
+    // @MaxDate(new Date(), { message: 'Date of birth is in the future' })
     readonly dateOfBirth?: string;
 
 }

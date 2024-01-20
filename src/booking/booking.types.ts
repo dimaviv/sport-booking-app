@@ -1,6 +1,8 @@
-import { ObjectType, Field, Int } from '@nestjs/graphql';
-import {Facility, Slot} from "../facility/facility.types";
+import {ObjectType, Field, Int, Float} from '@nestjs/graphql';
+import {Facility, TimeSlot} from "../facility/facility.types";
 import {User} from "../user/user.type";
+
+
 
 @ObjectType()
 export class Booking {
@@ -10,20 +12,24 @@ export class Booking {
   @Field(() => Int)
   userId: number;
 
-  @Field(() => String)
-  status: string;
+  @Field(() => Int)
+  facilityId: number;
 
-  @Field(() => User)
-  user: User;
+  @Field({ nullable: true })
+  status?: string;
+
+  @Field(() => Float, { nullable: true })
+  price?: number;
 
   @Field(() => [BookingSlot])
   bookingSlots: BookingSlot[];
 
-  @Field(() => Facility, { nullable: true })
+  @Field(() => User)
+  user: User;
+
+  @Field(() => Facility)
   facility: Facility;
 
-  @Field(() => Int, { nullable: true })
-  facilityId: number;
 }
 
 @ObjectType()
@@ -35,11 +41,15 @@ export class BookingSlot {
   bookingId: number;
 
   @Field(() => Int)
-  slotId: number;
+  timeSlotId: number;
 
   @Field(() => Booking)
   booking: Booking;
 
-  @Field(() => Slot)
-  slot: Slot;
+  @Field(() => TimeSlot)
+  timeSlot: TimeSlot;
 }
+
+
+
+

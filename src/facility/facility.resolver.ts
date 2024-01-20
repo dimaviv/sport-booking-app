@@ -2,7 +2,7 @@ import {Resolver, Query, Mutation, Args, Int, Context} from '@nestjs/graphql';
 import { FacilityService } from './facility.service';
 import { CreateFacilityInput } from './dto/create-facility.input';
 import { UpdateFacilityInput } from './dto/update-facility.input';
-import {Facility, FacilitiesResponse, UpdateFacilityResponse} from "./facility.types";
+import {Facility, FacilitiesResponse, UpdateFacilityResponse, TimeSlot} from "./facility.types";
 import {UseGuards} from "@nestjs/common";
 import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
 import {Request} from "express";
@@ -11,12 +11,37 @@ import {FacilitiesFilterInput} from "./dto/facilities-filter.input";
 import {PaginationArgs} from "../common/pagination/pagination.args";
 import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
+import {CreateScheduleInput} from "./dto/create-schedule.input";
+import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 
 
 
 @Resolver(() => Facility)
 export class FacilityResolver {
   constructor(private readonly facilityService: FacilityService) {}
+
+
+  @UseGuards(GraphqlAuthGuard)
+  @Mutation(() => [TimeSlot])
+  async createSchedule(@Args('createScheduleInput') createScheduleInput: CreateScheduleInput,
+                       @Context() context: {req: Request}) {
+
+    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User can not be the owner")
+
+    return this.facilityService.createSchedule(createScheduleInput, context.req.user.id);
+  }
+
+
+  @UseGuards(GraphqlAuthGuard)
+  @Mutation(() => [TimeSlot])
+  async updateTimeSlots(@Args('updateTimeSlotsInput', {nullable: true}) updateTimeSlotsInput: UpdateTimeSlotsInput,
+                        @Context() context: {req: Request}){
+
+    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User doesn't own any facility")
+
+    return this.facilityService.updateTimeSlots(updateTimeSlotsInput, context.req.user.id);
+  }
+
 
   @UseGuards(GraphqlAuthGuard)
   @Mutation(() => Facility)
