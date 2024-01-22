@@ -80,7 +80,7 @@ export class FacilityResolver {
   }
 
 
-  @UseGuards(GraphqlAuthCheck)
+  //@UseGuards(GraphqlAuthCheck)
   @Query(() => FacilitiesResponse)
   async findAll(@Args('facilitiesFilterInput', {nullable: true}) facilitiesFilterInput: FacilitiesFilterInput,
                 @Args('paginationArgs', {nullable: true}) paginationArgs: PaginationArgs,
@@ -88,10 +88,11 @@ export class FacilityResolver {
     return await this.facilityService.findAll(facilitiesFilterInput, paginationArgs, context?.req?.user?.id);
   }
 
-  @UseGuards(GraphqlAuthCheck)
+  //@UseGuards(GraphqlAuthCheck)
   @Query(() => Facility, { name: 'facility' })
   async findOne(@Args('id', { type: () => Int }) id: number,
           @Context() context?: {req: Request}) {
+
     return await this.facilityService.findOne(id, context?.req?.user?.id);
   }
 
