@@ -19,8 +19,9 @@ model TimeSlot {
   startTime          DateTime
   endTime            DateTime
   price              Float?
-  status             TimeSlotStatus @default(available)
+  status             TimeSlotStatus  @default(available)
   temporaryBlockDate DateTime?
+  isActive           Boolean?        @default(true)
 
   facility           Facility @relation(fields: [facilityId], references: [id])
 

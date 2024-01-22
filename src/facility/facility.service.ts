@@ -62,9 +62,22 @@ export class FacilityService {
         await prisma.timeSlot.deleteMany({
           where: {
             facilityId: facilityId,
+            bookingSlots: {
+              none: {}
+            }
           },
         });
-
+        await prisma.timeSlot.updateMany({
+          where: {
+            facilityId: facilityId,
+            bookingSlots: {
+              some: {}
+            }
+          },
+          data: {
+            isActive: false
+          }
+        });
         await prisma.timeSlot.createMany({
           data: slots.map(slot => ({
             facilityId,
@@ -78,6 +91,7 @@ export class FacilityService {
         return prisma.timeSlot.findMany({
           where: {
             facilityId: facilityId,
+            isActive: true,
           },
         });
       });
@@ -251,6 +265,7 @@ export class FacilityService {
         where:{id},
         include: {
           images: true,
+          timeSlots: true,
           _count: {
             select: { ratings: true },
           },

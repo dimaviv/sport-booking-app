@@ -27,9 +27,6 @@ export class GraphqlAuthCheck implements CanActivate{
             token = this.extractTokenFromCookie(request);
         }
 
-        if (!token) {
-            throw new UnauthorizedException();
-        }
         try {
             const payload = await this.jwtService.verifyAsync(token, {
                 secret: this.configService.get<string>('ACCESS_TOKEN_SECRET')

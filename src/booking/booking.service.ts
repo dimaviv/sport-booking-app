@@ -32,6 +32,7 @@ export class BookingService {
         where: {
           id: { in: timeSlotIds },
           status: 'available',
+          isActive: true,
         },
         select: {
           id: true,
@@ -107,6 +108,7 @@ export class BookingService {
         where: {
           id: { in: timeSlotIds },
           status: 'available',
+          isActive: true,
         },
         select: {
           id: true,
