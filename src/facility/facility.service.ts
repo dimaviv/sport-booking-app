@@ -47,7 +47,6 @@ export class FacilityService {
   }
 
 
-
   async createSchedule(createScheduleInput: CreateScheduleInput, userId: number) {
     const { facilityId, daysOfWeek, price, startTime, endTime } = createScheduleInput;
 
@@ -99,7 +98,6 @@ export class FacilityService {
       throw new InternalException(e.message);
     }
   }
-
 
 
   private generateTimeSlots(startTime: string, endTime: string, daysOfWeek: number[]) {
@@ -265,7 +263,11 @@ export class FacilityService {
         where:{id},
         include: {
           images: true,
-          timeSlots: true,
+          timeSlots: {
+            where:{
+              isActive: true
+            }
+          },
           _count: {
             select: { ratings: true },
           },
