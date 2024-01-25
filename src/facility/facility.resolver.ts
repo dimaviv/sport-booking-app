@@ -1,19 +1,17 @@
-import {Resolver, Query, Mutation, Args, Int, Context} from '@nestjs/graphql';
-import { FacilityService } from './facility.service';
-import { CreateFacilityInput } from './dto/create-facility.input';
-import { UpdateFacilityInput } from './dto/update-facility.input';
-import {Facility, FacilitiesResponse, UpdateFacilityResponse, TimeSlot} from "./facility.types";
+import {Args, Context, Int, Mutation, Query, Resolver} from '@nestjs/graphql';
+import {FacilityService} from './facility.service';
+import {CreateFacilityInput} from './dto/create-facility.input';
+import {UpdateFacilityInput} from './dto/update-facility.input';
+import {CreateFacilityResponse, FacilitiesResponse, Facility, TimeSlot, UpdateFacilityResponse} from "./facility.types";
 import {UseGuards} from "@nestjs/common";
 import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
 import {Request} from "express";
 import {UnauthorizedException} from "../../exceptions/validation.exception";
 import {FacilitiesFilterInput} from "./dto/facilities-filter.input";
 import {PaginationArgs} from "../common/pagination/pagination.args";
-import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-
 
 
 @Resolver(() => Facility)
@@ -44,7 +42,7 @@ export class FacilityResolver {
 
 
   @UseGuards(GraphqlAuthGuard)
-  @Mutation(() => Facility)
+  @Mutation(() => CreateFacilityResponse)
   async createFacility(@Args('createFacilityInput') createFacilityInput: CreateFacilityInput,
                  @Args('photo', { type: () => GraphQLUpload, nullable: true })
                      photo: GraphQLUpload.FileUpload,

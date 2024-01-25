@@ -141,3 +141,12 @@ export class UpdateFacilityResponse {
   photo?: Image
 }
 
+@ObjectType()
+export class CreateFacilityResponse {
+  @Field(() => Facility)
+  facility: Facility;
+
+  @Field(() => Image, {nullable:true})
+  photo?: Image
+}
+

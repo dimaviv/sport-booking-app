@@ -157,15 +157,16 @@ export class FacilityService {
         });
 
         if (photoName) {
-          await prisma.image.create({
+          const photo = await prisma.image.create({
             data: {
               image: photoName,
               facilityId: facility.id,
               isMain: true
             }
           });
+          return {facility, photo};
         }
-        return facility;
+        return {facility};
       });
 
 
@@ -192,20 +193,22 @@ export class FacilityService {
           }});
 
         if (photoName) {
-          await prisma.image.findFirst({
+          await prisma.image.deleteMany({
             where:{
               facilityId: updatedFacility.id,
               isMain: true
             }
           })
-          await prisma.image.create({
+          const photo = await prisma.image.create({
             data: {
               image: photoName,
               facilityId: updatedFacility.id,
               isMain: true
             }
           });
+          return {facility: updatedFacility, photo}
         }
+        return {facility: updatedFacility}
       });
     } catch (e) {
       throw new InternalException(e.message);

@@ -42,6 +42,11 @@ input CreateFacilityInput {
   sportType: sport_type!
 }
 
+type CreateFacilityResponse {
+  facility: Facility!
+  photo: Image
+}
+
 input CreateRatingInput {
   facilityId: Float!
   value: Float!
@@ -120,7 +125,7 @@ type Mutation {
   accessToken(refresh: String): String!
   create(roleInput: RoleDto!): RoleResponse!
   createBooking(createBookingInput: CreateBookingInput!): Booking!
-  createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): Facility!
+  createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): CreateFacilityResponse!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   createSchedule(createScheduleInput: CreateScheduleInput!): [TimeSlot!]!
   login(loginInput: LoginDto!): LoginResponse!
