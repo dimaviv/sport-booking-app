@@ -126,10 +126,14 @@ model Facility {
 
   owner          User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
+  search_vector  Unsupported("TSVECTOR")?
+
   timeSlots TimeSlot[]
   bookings  Booking[]
   ratings   Rating[]
   images    Image[]
+
+  @@index([search_vector])
 }
 
 model Image {
@@ -165,6 +169,12 @@ enum covering_type {
   parquet
   natural_lawn
   rubber
+  sand
+}
+
+enum facility_type {
+  indoor
+  outdoor
 }
 
 enum TimeSlotStatus {
@@ -184,7 +194,4 @@ enum BookingStatuses {
   failed
 }
 
-enum facility_type {
-  indoor
-  outdoor
-}
+

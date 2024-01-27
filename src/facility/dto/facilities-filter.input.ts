@@ -1,5 +1,5 @@
-import { InputType, Field, PartialType } from '@nestjs/graphql';
-import {IsInt, isNumber, IsOptional, IsString} from "class-validator";
+import { InputType, Field } from '@nestjs/graphql';
+import {IsInt, IsOptional, IsString} from "class-validator";
 
 @InputType()
 export class FacilitiesFilterInput {
@@ -33,5 +33,10 @@ export class FacilitiesFilterInput {
   @IsInt()
   @Field({ nullable: true })
   readonly ownerId?: number;
+
+  @IsOptional()
+  @IsString()
+  @Field({ nullable: true })
+  readonly search?: string;
 
 }

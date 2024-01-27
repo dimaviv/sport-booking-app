@@ -13,6 +13,7 @@ import {GoogleStrategy} from "./strategies/google.stategy";
 import {RolesService} from "../roles/roles.service";
 import {UserService} from "../user/user.service";
 import {GraphQLError} from "graphql/index";
+import {before} from "@nestjs/graphql/dist/plugin";
 
 
 @Injectable()

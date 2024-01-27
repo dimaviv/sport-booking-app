@@ -70,6 +70,7 @@ input FacilitiesFilterInput {
   district: String
   facilityType: String
   ownerId: Float
+  search: String
   sortBy: String
   sportType: String
 }
@@ -138,7 +139,7 @@ type Mutation {
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
   updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput): [TimeSlot!]!
-  uploadFacilityPhotos(facilityId: Float!, photos: Upload!): Facility!
+  uploadFacilityPhotos(facilityId: Float!, photos: Upload!): [Image!]!
 }
 
 input PaginationArgs {
@@ -283,6 +284,7 @@ enum covering_type {
   natural_lawn
   parquet
   rubber
+  sand
 }
 
 enum facility_type {

@@ -2,7 +2,7 @@ import {Args, Context, Int, Mutation, Query, Resolver} from '@nestjs/graphql';
 import {FacilityService} from './facility.service';
 import {CreateFacilityInput} from './dto/create-facility.input';
 import {UpdateFacilityInput} from './dto/update-facility.input';
-import {CreateFacilityResponse, FacilitiesResponse, Facility, TimeSlot, UpdateFacilityResponse} from "./facility.types";
+import {CreateFacilityResponse, FacilitiesResponse, Facility, TimeSlot, UpdateFacilityResponse, Image} from "./facility.types";
 import {UseGuards} from "@nestjs/common";
 import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
 import {Request} from "express";
@@ -66,15 +66,16 @@ export class FacilityResolver {
   }
 
   @UseGuards(GraphqlAuthGuard)
-  @Mutation(() => Facility)
+  @Mutation(() => [Image])
   async uploadFacilityPhotos( @Args('facilityId') facilityId: number,
                @Args('photos', { type: () => GraphQLUpload })
                    photos: GraphQLUpload.FileUpload[],
                @Context() context: {req: Request}){
 
+    console.log(photos)
     if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User doesn't own any facility")
 
-    return await this.facilityService.uploadFacilityPhotos(facilityId, context.req.user.id, photos);
+    return await this.facilityService.uploadFacilityPhotos(facilityId, context.req.user.id, [photos]);
   }
 
 

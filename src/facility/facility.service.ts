@@ -9,7 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-
+import { Prisma } from '@prisma/client'
 
 @Injectable()
 export class FacilityService {
@@ -118,7 +118,6 @@ export class FacilityService {
     return slots;
   }
 
-
   async uploadFacilityPhotos(facilityId: number, userId: number, imageFiles: any[]): Promise<Image[]> {
     if (!await this.isOwner(facilityId, userId)){
       throw new BadRequestException("User isn't the owner")
@@ -134,12 +133,12 @@ export class FacilityService {
             }
           });
         }));
+
       });
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
-
 
   async create(createFacilityInput: CreateFacilityInput, userId: number, photoFile: any = null) {
     try {
@@ -217,8 +216,12 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
-      const { sortBy, sportType, coveringType, facilityType, district, ownerId } = filters;
+      const { sortBy, sportType, coveringType, facilityType, district, ownerId, search } = filters;
       let { page, limit } = pagination;
+
+      if (search) {
+       return this.fullTextSearchAll(filters, pagination)
+      }
 
       const where = {
         ...(sportType && { sportType }),
@@ -227,7 +230,6 @@ export class FacilityService {
         ...(district && { district }),
         ...(ownerId && { ownerId }),
       };
-
       const [facilities, totalCount] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
           where,
@@ -255,10 +257,64 @@ export class FacilityService {
       const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
 
       return {totalCount, facilities: facilitiesWithRating}
+
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
+
+
+  async fullTextSearchAll(filters, pagination){
+    const { search, sportType, coveringType, facilityType, district } = filters;
+    let { page, limit } = pagination;
+    const offset = page * limit - limit;
+
+    const searchInput = search.split(' ').join(' | ');
+
+    const rawFacilities: any = await this.prisma.$queryRaw`
+        SELECT id, ts_rank_cd(search_vector, query) AS rank
+        FROM "Facility", to_tsquery('russian', ${searchInput}) query
+        WHERE search_vector @@ query
+         ${sportType ? Prisma.sql`AND "sportType" = ${sportType}::sport_type` : Prisma.empty}
+         ${coveringType ? Prisma.sql`AND "coveringType" = ${coveringType}::covering_type` : Prisma.empty}
+         ${facilityType ? Prisma.sql`AND "facilityType" = ${facilityType}::facility_type` : Prisma.empty}
+         ${district ? Prisma.sql`AND "district" = ${district}` : Prisma.empty}
+        ORDER BY rank DESC
+        LIMIT ${limit} OFFSET ${offset}`;
+
+    const facilityOrder = new Map(rawFacilities.map((f, index) => [f.id, index]));
+    const facilityIds: any = Array.from(facilityOrder.keys());
+
+    const facilities = await this.prisma.facility.findMany({
+        where:{id:{in:facilityIds}},
+        include: {
+          images: {
+            where:{ isMain:true }
+          },
+          _count: {
+            select: { ratings: true },
+          },
+        },
+      })
+    // @ts-ignore
+    facilities.sort((a, b) => facilityOrder.get(a.id) - facilityOrder.get(b.id));
+
+    const totalCount = await this.prisma.$queryRaw`
+        SELECT COUNT(*)
+        FROM "Facility", to_tsquery('russian', ${searchInput}) query
+        WHERE search_vector @@ query
+         ${sportType ? Prisma.sql`AND "sportType" = ${sportType}::sport_type` : Prisma.empty}
+         ${coveringType ? Prisma.sql`AND "coveringType" = ${coveringType}::covering_type` : Prisma.empty}
+         ${facilityType ? Prisma.sql`AND "facilityType" = ${facilityType}::facility_type` : Prisma.empty}
+         ${district ? Prisma.sql`AND "district" = ${district}` : Prisma.empty}
+      `;
+
+    const aggregateRating = await this.ratingService.aggregateRating()
+    const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
+
+    return {totalCount:Number(totalCount[0].count), facilities: facilitiesWithRating}
+  }
+
 
   async findOne(id: number, userId: number) {
     try {
@@ -309,5 +365,7 @@ export class FacilityService {
     if(!facility) throw Error('Facility not found')
     return facility.ownerId === userId
   }
+
+
 
 }
