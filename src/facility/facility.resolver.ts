@@ -9,7 +9,9 @@ import {Request} from "express";
 import {UnauthorizedException} from "../../exceptions/validation.exception";
 import {FacilitiesFilterInput} from "./dto/facilities-filter.input";
 import {PaginationArgs} from "../common/pagination/pagination.args";
-import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
+ import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
+
+// import { GraphQLUpload, FileUpload } from 'graphql-upload';
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 
@@ -68,14 +70,13 @@ export class FacilityResolver {
   @UseGuards(GraphqlAuthGuard)
   @Mutation(() => [Image])
   async uploadFacilityPhotos( @Args('facilityId') facilityId: number,
-               @Args('photos', { type: () => GraphQLUpload })
+               @Args('photos', { type: () => [GraphQLUpload] })
                    photos: GraphQLUpload.FileUpload[],
                @Context() context: {req: Request}){
 
-    console.log(photos)
     if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User doesn't own any facility")
 
-    return await this.facilityService.uploadFacilityPhotos(facilityId, context.req.user.id, [photos]);
+    return await this.facilityService.uploadFacilityPhotos(facilityId, context.req.user.id, photos);
   }
 
 

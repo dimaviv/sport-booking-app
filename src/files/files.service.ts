@@ -58,8 +58,9 @@ export class FilesService {
         }
     }
 
-    async uploadFile(file): Promise<string>{
+    async uploadFile(fileArg): Promise<string>{
         try {
+            const file = await fileArg
             await this.checkFileSize(file);
 
             const { createReadStream } = await file;

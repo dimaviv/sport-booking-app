@@ -139,7 +139,7 @@ type Mutation {
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
   updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput): [TimeSlot!]!
-  uploadFacilityPhotos(facilityId: Float!, photos: Upload!): [Image!]!
+  uploadFacilityPhotos(facilityId: Float!, photos: [Upload!]!): [Image!]!
 }
 
 input PaginationArgs {
