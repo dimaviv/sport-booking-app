@@ -39,6 +39,14 @@ export class FacilityService {
           where: {
             id: { in: timeSlotIds }
           },
+          orderBy: [
+            {
+              dayOfWeek: 'asc',
+            },
+            {
+              startTime: 'asc',
+            },
+          ],
         });
       });
     } catch (e) {
@@ -92,6 +100,14 @@ export class FacilityService {
             facilityId: facilityId,
             isActive: true,
           },
+          orderBy: [
+            {
+              dayOfWeek: 'asc',
+            },
+            {
+              startTime: 'asc',
+            },
+          ],
         });
 
       });
@@ -265,7 +281,6 @@ export class FacilityService {
     }
   }
 
-
   async fullTextSearchAll(filters, pagination){
     const { search, sportType, coveringType, facilityType, district } = filters;
     let { page, limit } = pagination;
@@ -317,7 +332,6 @@ export class FacilityService {
     return {totalCount:Number(totalCount[0].count), facilities: facilitiesWithRating}
   }
 
-
   async findOne(id: number, userId: number) {
     try {
       const facility = await this.prisma.facility.findUnique({
@@ -327,7 +341,15 @@ export class FacilityService {
           timeSlots: {
             where:{
               isActive: true
-            }
+            },
+            orderBy: [
+              {
+                dayOfWeek: 'asc',
+              },
+              {
+                startTime: 'asc',
+              },
+            ],
           },
           _count: {
             select: { ratings: true },
@@ -367,7 +389,5 @@ export class FacilityService {
     if(!facility) throw Error('Facility not found')
     return facility.ownerId === userId
   }
-
-
 
 }
