@@ -48,7 +48,14 @@ export class UserService {
             }
         };
 
-        return await this.prisma.user.create({
+        const candidate = await this.prisma.user.findUnique({
+            where: {email: profile.email}
+        });
+        if (candidate) {
+            throw new BadRequestException("Email already in use");
+        }
+
+        return this.prisma.user.create({
             data: {...userInput},
             include: {
                 roles: true,

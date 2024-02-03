@@ -18,7 +18,7 @@ model TimeSlot {
   dayOfWeek          Int      // Representing days as integers (e.g., 0 for Sunday, 1 for Monday, etc.)
   startTime          DateTime
   endTime            DateTime
-  price              Float?
+  price              Decimal         @db.Decimal(8, 2)
   status             TimeSlotStatus  @default(available)
   temporaryBlockDate DateTime?
   isActive           Boolean?        @default(true)
@@ -122,6 +122,7 @@ model Facility {
   location       String?
   minBookingTime Int?
 
+  avgPrice       Decimal?         @db.Decimal(8, 2)  // Is calculated with a trigger
   ownerId        Int?
 
   owner          User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)

@@ -5,7 +5,7 @@ import {JwtService} from "@nestjs/jwt";
 import {MailService} from "../mail/mail.service";
 import * as bcrypt from "bcrypt";
 import { v4 as uuidv4 } from 'uuid';
-import {Request, Response} from 'express'
+import {Request, response, Response} from 'express'
 import {LoginDto, RegisterDto} from "./dto";
 import {User} from "../user/user.type";
 import {FacebookStrategy} from "./strategies/facebook.stategy";
@@ -43,6 +43,49 @@ export class AuthService {
         }
         return this.issueTokens(existUser, res);
     }
+
+
+    async authWithGoogle(token, response){
+       const googleUser = await this.fetchGoogleUserProfile(token)
+      // const googleUser = {profile: {googleId: '12312', fullname:'Максим Глущук', email: 'test@gmail.com'},
+      //     googleId: '12312', email: 'test@gmail.com'};
+      const existUser = await this.prisma.user.findUnique({
+          where: {email:googleUser.email, googleId: googleUser.googleId},
+          include: {roles:true}});
+
+        console.log('googleUser', googleUser)
+        console.log('existUser', existUser)
+      if (!existUser){
+        const newUser = await this.userService.createUserFromOAuthData(googleUser.profile);
+        return this.issueTokens(newUser, response);
+      }
+
+      return this.issueTokens(existUser, response);
+    }
+
+    async fetchGoogleUserProfile(accessToken) {
+        const googleUserInfoUrl = 'https://www.googleapis.com/oauth2/v2/userinfo';
+        console.log(accessToken)
+        try {
+            const response = await fetch(googleUserInfoUrl, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            console.log(response)
+            if (!response.ok) {
+                throw new Error('Failed to fetch user profile from Google');
+            }
+
+            const data = await response.json();
+            console.log(response)
+            return {profile: data, googleId: data.id, email: data.email};
+        } catch (error) {
+            console.error('Error fetching Google user info:', error);
+            throw new Error('Error validating Google accessToken');
+        }
+    }
+
     async facebookAuth(req, res){
         if (!req.user) {
             return 'No user from facebook'

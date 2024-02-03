@@ -93,6 +93,7 @@ export class FacilityService {
             isActive: true,
           },
         });
+
       });
     } catch (e) {
       throw new InternalException(e.message);
@@ -101,6 +102,7 @@ export class FacilityService {
 
 
   private generateTimeSlots(startTime: string, endTime: string, daysOfWeek: number[]) {
+
     const slots = [];
 
     daysOfWeek.forEach(dayOfWeek => {
@@ -235,13 +237,13 @@ export class FacilityService {
           where,
           include: {
             images: {
-              where:{ isMain:true }
+              where: { isMain: true }
             },
             _count: {
               select: { ratings: true },
             },
           },
-          orderBy:{
+          orderBy: {
             ratings: {
               _count: 'desc'
             }

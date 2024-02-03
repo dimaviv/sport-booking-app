@@ -2,7 +2,7 @@ import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql';
 import {AuthService} from "./auth.service";
 import {LoginResponse, RegisterResponse} from "./types";
 import {LoginDto, RegisterDto} from "./dto";
-import {BadRequestException} from "@nestjs/common";
+import {BadRequestException, UnauthorizedException} from "@nestjs/common";
 import {Response, Request} from "express";
 import {GraphQLError} from "graphql/index";
 
@@ -13,6 +13,13 @@ export class AuthResolver {
         private readonly authService: AuthService,
     ) {}
 
+
+    @Mutation(() => LoginResponse)
+    async googleAuth(@Args('token') token: string,
+                     @Context() context: { req: Request, res: Response }) {
+
+        return this.authService.authWithGoogle(token, context.req.res);
+    }
 
     @Mutation(() => RegisterResponse)
     async register(
@@ -51,8 +58,6 @@ export class AuthResolver {
         }
     }
 
-    @Query(() => String)
-    async hello() {
-        return 'hello';
-    }
+
+
 }

@@ -83,6 +83,7 @@ type FacilitiesResponse {
 type Facility {
   _count: Count!
   address: String!
+  avgPrice: Float
   avgRating: Float!
   bookings: [Booking!]!
   coveringType: String!
@@ -129,6 +130,7 @@ type Mutation {
   createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): CreateFacilityResponse!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   createSchedule(createScheduleInput: CreateScheduleInput!): [TimeSlot!]!
+  googleAuth(token: String!): LoginResponse!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!
   register(registerInput: RegisterDto!): RegisterResponse!
@@ -152,7 +154,6 @@ type Query {
   findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
   getByValue(name: String!): RoleResponse!
   getProfile: User!
-  hello: String!
 }
 
 type Rating {

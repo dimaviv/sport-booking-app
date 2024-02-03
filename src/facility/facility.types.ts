@@ -43,6 +43,9 @@ export class Facility {
   @Field({nullable: true})
   minBookingTime?: number;
 
+  @Field({nullable: true})
+  avgPrice?: number;
+
   @Field()
   ownerId: number;
 
