@@ -47,14 +47,10 @@ export class AuthService {
 
     async authWithGoogle(token, response){
        const googleUser = await this.fetchGoogleUserProfile(token)
-      // const googleUser = {profile: {googleId: '12312', fullname:'Максим Глущук', email: 'test@gmail.com'},
-      //     googleId: '12312', email: 'test@gmail.com'};
       const existUser = await this.prisma.user.findUnique({
           where: {email:googleUser.email, googleId: googleUser.googleId},
           include: {roles:true}});
 
-        console.log('googleUser', googleUser)
-        console.log('existUser', existUser)
       if (!existUser){
         const newUser = await this.userService.createUserFromOAuthData(googleUser.profile);
         return this.issueTokens(newUser, response);
@@ -65,20 +61,18 @@ export class AuthService {
 
     async fetchGoogleUserProfile(accessToken) {
         const googleUserInfoUrl = 'https://www.googleapis.com/oauth2/v2/userinfo';
-        console.log(accessToken)
         try {
             const response = await fetch(googleUserInfoUrl, {
                 headers: {
                     'Authorization': `Bearer ${accessToken}`
                 }
             });
-            console.log(response)
             if (!response.ok) {
                 throw new Error('Failed to fetch user profile from Google');
             }
 
             const data = await response.json();
-            console.log(response)
+            // console.log(response)
             return {profile: data, googleId: data.id, email: data.email};
         } catch (error) {
             console.error('Error fetching Google user info:', error);

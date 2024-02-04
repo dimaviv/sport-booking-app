@@ -34,10 +34,11 @@ export class UserService {
     async createUserFromOAuthData(profile: any): Promise<User> {
         const {role} = await this.roleService.getRoleByValue('USER')
         const userInput  = {
-            googleId: profile.googleId,
+            googleId: profile.id,
             facebookId: profile.facebookId,
-            fullname: profile.fullname,
+            fullname: profile.name,
             email: profile.email,
+            avatar: profile.picture,
             isActivated: true,
             password: null,
             activationLink: null,
