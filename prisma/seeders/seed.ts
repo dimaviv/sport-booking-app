@@ -701,14 +701,34 @@ const facilitiesData = [
     },
 
 ];
-
+const roles = [
+    { id: 1, value: 'USER', description: 'Usual user' },
+    { id: 2, value: 'ADMIN', description: 'Admin user' },
+    { id: 3, value: 'OWNER', description: 'Owner of the facility' },
+];
 async function main() {
-    for (let data of facilitiesData) {
-        const facility = await prisma.facility.create({
-            data,
-        });
-        console.log(`Created facility with id: ${facility.id}`);
+    try {
+        for (const role of roles) {
+            const roleCreation = await prisma.role.create({
+                data: role,
+            });
+            console.log(`Inserted role: ${roleCreation.value}`);
+        }
+    }catch (e){
+        console.log('Roles were not created')
     }
+    try {
+        for (let data of facilitiesData) {
+            const facility = await prisma.facility.create({
+                data,
+            });
+            console.log(`Created facility with id: ${facility.id}`);
+        }
+    }catch (e){
+        console.log(`Facilities were not created`)
+    }
+
+
 }
 
 main()

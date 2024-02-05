@@ -8,5 +8,3 @@
 ALTER TABLE "Facility" DROP COLUMN "minBookingTime",
 ADD COLUMN     "minBookingTime" INTEGER;
 
--- DropEnum
-DROP TYPE "Level";

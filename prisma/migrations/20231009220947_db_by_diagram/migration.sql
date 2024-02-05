@@ -40,8 +40,11 @@ ALTER COLUMN "facilityId" DROP NOT NULL;
 ALTER TABLE "Facility" ADD COLUMN     "coveringType" "covering_type" NOT NULL,
 ADD COLUMN     "facilityType" "facility_type" NOT NULL,
 ADD COLUMN     "location" TEXT NOT NULL,
+ADD COLUMN     "district" TEXT NOT NULL,
+ADD COLUMN     "address" TEXT NOT NULL,
 ADD COLUMN     "minBookingTime" TIMESTAMP(3) NOT NULL,
 ADD COLUMN     "sportType" "sport_type" NOT NULL;
+
 
 -- CreateTable
 CREATE TABLE "UserOwner" (

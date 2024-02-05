@@ -105,36 +105,4 @@ export class UserService {
         return this.prisma.user.findUnique({where: {id}})
     }
 
-    // async createUser(dto: CreateUserDto, activationLink: string){
-    //     const user = await this.prisma.user.create({...dto, activationLink:activationLink});
-    //     const role = await this.roleService.getRoleByValue('USER')
-    //     await user.$set('roles', [role.id])
-    //     user.roles = [role]
-    //     return user;
-    //
-    // }
-
-
-    // async addRole(dto: AddRoleDto){
-    //     const user = await this.userRepository.findByPk(dto.userId)
-    //     const role = await this.roleService.getRoleByValue(dto.value);
-    //     if (role && user){
-    //         await user.$add('role', role.id)
-    //         return dto;
-    //     }
-    //     throw new HttpException('User or role wasn\'t found', HttpStatus.NOT_FOUND)
-    // }
-    //
-    // async ban(dto: BanUserDto) {
-    //     const user = await this.userRepository.findByPk(dto.userId)
-    //     if (!user){
-    //         throw new HttpException('User wasn\'t found', HttpStatus.NOT_FOUND)
-    //     }
-    //     user.banned = true;
-    //     user.banReason = dto.banReason;
-    //     await user.save();
-    //     return user;
-    // }
-
-
 }

@@ -5,15 +5,14 @@ import {JwtService} from "@nestjs/jwt";
 import {MailService} from "../mail/mail.service";
 import * as bcrypt from "bcrypt";
 import { v4 as uuidv4 } from 'uuid';
-import {Request, response, Response} from 'express'
+import {Request, Response} from 'express'
 import {LoginDto, RegisterDto} from "./dto";
 import {User} from "../user/user.type";
 import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {RolesService} from "../roles/roles.service";
 import {UserService} from "../user/user.service";
-import {GraphQLError} from "graphql/index";
-import {before} from "@nestjs/graphql/dist/plugin";
+
 
 
 @Injectable()
@@ -44,7 +43,6 @@ export class AuthService {
         return this.issueTokens(existUser, res);
     }
 
-
     async authWithGoogle(token, response){
        const googleUser = await this.fetchGoogleUserProfile(token)
       const existUser = await this.prisma.user.findUnique({
@@ -72,7 +70,6 @@ export class AuthService {
             }
 
             const data = await response.json();
-            // console.log(response)
             return {profile: data, googleId: data.id, email: data.email};
         } catch (error) {
             console.error('Error fetching Google user info:', error);
