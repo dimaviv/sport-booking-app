@@ -5,6 +5,7 @@ import {PrismaService} from "../prisma.service";
 import {RatingService} from "../rating/rating.service";
 import {FilesService} from "../files/files.service";
 import {Booking} from "./booking.types";
+import {log} from "util";
 
 @Injectable()
 export class BookingService {
@@ -40,10 +41,17 @@ export class BookingService {
           startTime: true,
           endTime: true,
         },
+        orderBy: [{dayOfWeek: 'asc',}, {startTime: 'asc',},],
       });
 
       if (timeSlots.length !== timeSlotIds.length) {
         throw new Error('One or more time slots are not available for booking.');
+      }
+
+      for (let i = 0; i < timeSlots.length - 1; i++) {
+        if (timeSlots[i].endTime.getTime() !== timeSlots[i + 1].startTime.getTime()) {
+          throw new Error('Time slots are not sequential.');
+        }
       }
 
       const { totalPrice, totalDuration } = timeSlots.reduce((acc, slot) => {
@@ -116,10 +124,17 @@ export class BookingService {
           startTime: true,
           endTime: true,
         },
+        orderBy: [{dayOfWeek: 'asc',}, {startTime: 'asc',},],
       });
 
       if (timeSlots.length !== timeSlotIds.length) {
         throw new Error('One or more time slots are not available for booking.');
+      }
+
+      for (let i = 0; i < timeSlots.length - 1; i++) {
+        if (timeSlots[i].endTime.getTime() !== timeSlots[i + 1].startTime.getTime()) {
+          throw new Error('Time slots are not sequential.');
+        }
       }
 
       const { totalPrice, totalDuration } = timeSlots.reduce((acc, slot) => {
@@ -152,24 +167,11 @@ export class BookingService {
         data:{price: totalPrice},
         include:{facility:true, bookingSlots:{
             include:{
-              timeSlot: true
+              timeSlot: true,
             }
           }}
       })
 
     });
-  }
-
-
-  findAll() {
-    return `This action returns all booking`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} booking`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} booking`;
   }
 }

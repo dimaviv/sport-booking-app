@@ -100,14 +100,7 @@ export class FacilityService {
             facilityId: facilityId,
             isActive: true,
           },
-          orderBy: [
-            {
-              dayOfWeek: 'asc',
-            },
-            {
-              startTime: 'asc',
-            },
-          ],
+          orderBy: [{dayOfWeek: 'asc',}, {startTime: 'asc',},],
         });
 
       });
