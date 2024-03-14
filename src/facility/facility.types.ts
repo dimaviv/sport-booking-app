@@ -1,6 +1,5 @@
 import {ObjectType, Field, Int, Float} from '@nestjs/graphql';
 import {User} from "../user/user.type";
-import {IsInt} from "class-validator";
 import {Rating} from "../rating/rating.type";
 import {Booking, BookingSlot} from "../booking/booking.types";
 

@@ -5,8 +5,17 @@ import {JwtService} from "@nestjs/jwt";
 import {PrismaService} from "../prisma.service";
 import {FilesService} from "../files/files.service";
 import {RolesService} from "../roles/roles.service";
+import {RatingService} from "../rating/rating.service";
+import {RatingModule} from "../rating/rating.module";
+import {FacilityModule} from "../facility/facility.module";
+
 
 @Module({
-  providers: [UserService, UserResolver, JwtService, PrismaService, FilesService, RolesService]
+  providers: [UserService, UserResolver, JwtService, PrismaService, FilesService, RolesService, RatingService, RatingModule],
+  imports: [
+    RatingModule,
+    FacilityModule,
+  ],
 })
+
 export class UserModule {}

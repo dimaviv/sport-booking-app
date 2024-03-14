@@ -10,10 +10,15 @@ import {RolesService} from "../roles/roles.service";
 import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {AuthController} from "./auth.controller";
+import {RatingModule} from "../rating/rating.module";
 
 @Module({
   providers: [AuthResolver, AuthService, MailService, FilesService, UserService,
     JwtService, PrismaService, RolesService,GoogleStrategy, FacebookStrategy],
-  controllers: [AuthController]
+  controllers: [AuthController],
+  imports: [
+    RatingModule,
+  ],
+
 })
 export class AuthModule {}

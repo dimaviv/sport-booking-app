@@ -10,54 +10,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-
 model TimeSlot {
-  id                 Int      @id @default(autoincrement())
+  id                 Int            @id @default(autoincrement())
   facilityId         Int
-  dayOfWeek          Int      // Representing days as integers (e.g., 0 for Sunday, 1 for Monday, etc.)
+  dayOfWeek          Int // Representing days as integers (e.g., 0 for Sunday, 1 for Monday, etc.)
   startTime          DateTime
   endTime            DateTime
-  price              Decimal         @db.Decimal(8, 2)
-  status             TimeSlotStatus  @default(available)
+  price              Decimal        @db.Decimal(8, 2)
+  status             TimeSlotStatus @default(available)
   temporaryBlockDate DateTime?
-  isActive           Boolean?        @default(true)
+  isActive           Boolean?       @default(true)
 
-  facility           Facility @relation(fields: [facilityId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
 
-  bookingSlots       BookingSlot[]
+  bookingSlots BookingSlot[]
 
   @@index([facilityId, dayOfWeek])
 }
 
-
 model BookingSlot {
-  id         Int      @id @default(autoincrement())
+  id         Int @id @default(autoincrement())
   bookingId  Int
   timeSlotId Int
 
-  booking    Booking  @relation(fields: [bookingId], references: [id])
-  timeSlot   TimeSlot @relation(fields: [timeSlotId], references: [id])
+  booking  Booking  @relation(fields: [bookingId], references: [id])
+  timeSlot TimeSlot @relation(fields: [timeSlotId], references: [id])
 
   @@unique([bookingId, timeSlotId])
 }
 
-
 model Booking {
-  id           Int          @id @default(autoincrement())
-  userId       Int
-  status       String?
-  price        Float?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  status    String?
+  price     Float?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   bookingSlots BookingSlot[]
   user         User          @relation(fields: [userId], references: [id])
   facility     Facility      @relation(fields: [facilityId], references: [id])
   facilityId   Int
 }
-
-
 
 model Role {
   id          Int          @id @default(autoincrement())
@@ -89,16 +83,16 @@ model User {
   updatedAt      DateTime     @updatedAt
   activationLink String?      @unique
   isActivated    Boolean      @default(false)
+  googleId       String?      @unique
+  facebookId     String?      @unique
 
-  // Fields to store OAuth data
-  googleId   String? @unique
-  facebookId String? @unique
-
-  facilities Facility[]
+  facilities Facility[] @relation("UserFacilities")
+  favorites  Favorite[]
 
   bookings  Booking[]
   UserOwner UserOwner?
   Rating    Rating[]
+  Facility  Facility[]
 }
 
 model UserOwner {
@@ -111,7 +105,7 @@ model UserOwner {
 }
 
 model Facility {
-  id             Int           @id @default(autoincrement())
+  id             Int            @id @default(autoincrement())
   name           String?
   district       String?
   address        String?
@@ -122,12 +116,14 @@ model Facility {
   location       String?
   minBookingTime Int?
 
-  avgPrice       Decimal?         @db.Decimal(8, 2)  // Is calculated with a trigger
-  ownerId        Int?
+  avgPrice Decimal? @db.Decimal(8, 2)
+  ownerId  Int
 
-  owner          User? @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  users     User[]     @relation("UserFacilities")
+  favorites Favorite[]
 
-  search_vector  Unsupported("TSVECTOR")?
+  search_vector Unsupported("TSVECTOR")?
 
   timeSlots TimeSlot[]
   bookings  Booking[]
@@ -137,11 +133,22 @@ model Facility {
   @@index([search_vector])
 }
 
+model Favorite {
+  id         Int @id @default(autoincrement())
+  userId     Int
+  facilityId Int
+
+  user     User     @relation(fields: [userId], references: [id])
+  facility Facility @relation(fields: [facilityId], references: [id])
+
+  @@unique([userId, facilityId])
+}
+
 model Image {
-  id         Int    @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   image      String
   facilityId Int
-  isMain     Boolean @default(false)
+  isMain     Boolean  @default(false)
   facility   Facility @relation(fields: [facilityId], references: [id])
 }
 
@@ -194,5 +201,3 @@ enum BookingStatuses {
   completed
   failed
 }
-
-

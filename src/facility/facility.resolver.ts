@@ -9,9 +9,7 @@ import {Request} from "express";
 import {UnauthorizedException} from "../../exceptions/validation.exception";
 import {FacilitiesFilterInput} from "./dto/facilities-filter.input";
 import {PaginationArgs} from "../common/pagination/pagination.args";
- import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
-
-// import { GraphQLUpload, FileUpload } from 'graphql-upload';
+import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 

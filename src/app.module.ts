@@ -1,4 +1,4 @@
-import {HttpException, Module} from '@nestjs/common';
+import {forwardRef, HttpException, Module} from '@nestjs/common';
 import { AuthModule } from './auth/auth.module';
 import { UserModule } from './user/user.module';
 import * as path from "path";
@@ -63,6 +63,7 @@ interface CustomError extends Error {
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, 'static'),
     }),
+    //forwardRef(() => FacilityModule),
     FacilityModule,
     RatingModule,
     BookingModule,

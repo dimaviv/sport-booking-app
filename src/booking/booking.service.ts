@@ -55,7 +55,7 @@ export class BookingService {
       }
 
       const { totalPrice, totalDuration } = timeSlots.reduce((acc, slot) => {
-        acc.totalPrice += slot.price || 0;
+        acc.totalPrice += Number(slot.price || 0);
         acc.totalDuration += slot.endTime.getTime() - slot.startTime.getTime();
         return acc;
       }, { totalPrice: 0, totalDuration: 0 });
@@ -138,7 +138,7 @@ export class BookingService {
       }
 
       const { totalPrice, totalDuration } = timeSlots.reduce((acc, slot) => {
-        acc.totalPrice += slot.price || 0;
+        acc.totalPrice += Number(slot.price || 0);
         acc.totalDuration += slot.endTime.getTime() - slot.startTime.getTime();
         return acc;
       }, { totalPrice: 0, totalDuration: 0 });

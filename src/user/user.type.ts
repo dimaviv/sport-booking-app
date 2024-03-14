@@ -1,6 +1,7 @@
 import { ObjectType, Field } from '@nestjs/graphql';
 import {Role} from "../roles/role.type";
 import {Facility} from "../facility/facility.types";
+import {Booking} from "../booking/booking.types";
 
 @ObjectType()
 export class UserOwner {
@@ -15,6 +16,7 @@ export class UserOwner {
 
     @Field({nullable: true})
     userId?: string;
+
 }
 
 @ObjectType()
@@ -65,8 +67,10 @@ export class User {
     @Field(() => UserOwner, {nullable: true})
     userOwner?: UserOwner;
 
-    // @Field(() => [Booking])
-    // bookings: Booking[];
+    @Field(() => [Booking], {nullable: true})
+    bookings?: Booking[];
 }
+
+
 
 

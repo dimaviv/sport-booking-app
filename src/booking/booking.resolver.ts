@@ -26,25 +26,5 @@ export class BookingResolver {
     return this.bookingService.update(updateBookingInput.id, updateBookingInput, context.req.user.id);
   }
 
-  // @UseGuards(GraphqlAuthGuard)
-  // @Query(() => [Booking], { name: 'booking' })
-  // findAll(@Context() context: {req: Request}) {
-  //   return this.bookingService.findAll();
-  // }
-  //
-  // @UseGuards(GraphqlAuthGuard)
-  // @Query(() => Booking, { name: 'booking' })
-  // findOne(@Args('id', { type: () => Int }) id: number,
-  //         @Context() context: {req: Request}) {
-  //   return this.bookingService.findOne(id);
-  // }
 
-
-
-  //  User
-  // @UseGuards(GraphqlAuthGuard)
-  // @Mutation(() => Booking)
-  // cancelBooking(@Args('id', { type: () => Int }) id: number) {
-  //   return this.bookingService.remove(id);
-  // }
 }
