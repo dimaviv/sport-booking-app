@@ -14,6 +14,38 @@ export class BookingService {
       private readonly prisma: PrismaService,
   ) {}
 
+
+  async findAllByUserId(userId: number, pagination) {
+    let { page, limit } = pagination;
+    const offset = (page - 1) * limit;
+
+    const [bookings, totalCount] = await this.prisma.$transaction([
+      this.prisma.booking.findMany({
+        where: {
+          userId: userId,
+        },
+        include: {
+          facility: true,
+          bookingSlots: {
+            include: {
+              timeSlot: true,
+            },
+          },
+        },
+        skip: offset,
+        take: limit,
+      }),
+      this.prisma.booking.count({
+        where: {
+          userId: userId,
+        },
+      }),
+    ]);
+
+    return { totalCount, bookings };
+  }
+
+
   async create(createBookingInput: CreateBookingInput, userId: number) {
     const { facilityId, timeSlotIds } = createBookingInput;
 
@@ -95,7 +127,6 @@ export class BookingService {
 
     });
   }
-
 
   async update(id: number, updateBookingInput: UpdateBookingInput, userId: number) {
     const { timeSlotIds } = updateBookingInput;

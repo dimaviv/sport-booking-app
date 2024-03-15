@@ -33,6 +33,15 @@ export class Booking {
 }
 
 @ObjectType()
+export class BookingsResponse {
+  @Field(() => [Booking])
+  bookings: Booking[];
+
+  @Field()
+  totalCount: number;
+}
+
+@ObjectType()
 export class BookingSlot {
   @Field(() => Int)
   id: number;

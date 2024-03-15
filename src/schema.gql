@@ -26,6 +26,11 @@ type BookingSlot {
   timeSlotId: Int!
 }
 
+type BookingsResponse {
+  bookings: [Booking!]!
+  totalCount: Float!
+}
+
 type Count {
   ratings: Float!
 }
@@ -160,6 +165,7 @@ input PaginationArgs {
 type Query {
   facility(id: Int!): Facility!
   findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
+  findAllBookings(paginationArgs: PaginationArgs): BookingsResponse!
   getByValue(name: String!): RoleResponse!
   getProfile: User!
   getUserFavorites(paginationArgs: PaginationArgs): FacilitiesResponse!

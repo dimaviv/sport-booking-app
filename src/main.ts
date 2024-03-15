@@ -29,7 +29,7 @@ async function bootstrap() {
           transform: true,
       })
   )
-  //app.useGlobalFilters(new GqlCustomExceptionFilter());
+  app.useGlobalFilters(new GqlCustomExceptionFilter());
 
   await app.listen(process.env.PORT);
 }
