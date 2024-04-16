@@ -10,16 +10,16 @@ export class CreateFacilityInput {
   readonly name: string;
 
   @IsString({message: "Must be string"})
-  @Field({ nullable: true })
-  readonly district?: string;
+  @Field()
+  readonly districtId: number;
 
   @IsString({message: "Must be string"})
   @Field()
   readonly address: string;
 
-  @IsString({message: "Must be string"})
-  @Field(() => sport_type)
-  readonly sportType: sport_type;
+  // @IsString({message: "Must be string"})
+  @Field(() => [sport_type])
+  readonly sportType: sport_type[];
 
   @IsString({message: "Must be string"})
   @Field(() => covering_type)

@@ -37,6 +37,11 @@ export class UserService {
                     include: {
                         facility: {
                             include: {
+                                district: {
+                                  include: {
+                                      city: true
+                                  }
+                                },
                                 images: {
                                     where: { isMain: true },
                                 },
@@ -56,11 +61,14 @@ export class UserService {
                 }),
             ]);
 
-            const facilities = favorites.map(favorite => favorite.facility);
+            const facilities = favorites.map(favorite => ({
+                ...favorite.facility,
+                    currentUserIsFavorite: true,
+            }));
             const aggregateRating = await this.ratingService.aggregateRating();
 
             const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
-            console.log(facilitiesWithRating)
+
             return { totalCount, facilities: facilitiesWithRating };
         } catch (err) {
             throw new InternalServerErrorException(err.message);

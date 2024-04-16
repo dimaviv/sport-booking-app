@@ -107,31 +107,55 @@ model UserOwner {
 model Facility {
   id             Int            @id @default(autoincrement())
   name           String?
-  district       String?
   address        String?
-  sportType      sport_type?
+  sportType      sport_type[]
   coveringType   covering_type?
   facilityType   facility_type?
   description    String?
   location       String?
   minBookingTime Int?
+  avgPrice       Decimal?       @db.Decimal(8, 2)
+  ownerId        Int
+  districtId     Int
+  isWorking      Boolean        @default(false)
 
-  avgPrice Decimal? @db.Decimal(8, 2)
-  ownerId  Int
 
-  owner     User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  users     User[]     @relation("UserFacilities")
-  favorites Favorite[]
+  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  district       District       @relation(fields: [districtId], references: [id]) // New relation to District
+  users          User[]         @relation("UserFacilities")
+  favorites      Favorite[]
+  search_vector  Unsupported("TSVECTOR")?
+  timeSlots      TimeSlot[]
+  bookings       Booking[]
+  ratings        Rating[]
+  images         Image[]
 
-  search_vector Unsupported("TSVECTOR")?
-
-  timeSlots TimeSlot[]
-  bookings  Booking[]
-  ratings   Rating[]
-  images    Image[]
 
   @@index([search_vector])
 }
+
+model City {
+  id         Int        @id @default(autoincrement())
+  name       String
+  districts  District[] // Relation to Districts
+
+  @@index([name], name: "idx_city_name")
+}
+
+
+model District {
+  id       Int        @id @default(autoincrement())
+  name     String
+  cityId   Int
+
+  city     City       @relation(fields: [cityId], references: [id])
+  facilities Facility[] // Relation to Facilities
+
+  @@index([name], name: "idx_district_name")
+  @@index([cityId], name: "idx_district_cityId")
+}
+
+
 
 model Favorite {
   id         Int @id @default(autoincrement())

@@ -1,5 +1,7 @@
-import { InputType, Field } from '@nestjs/graphql';
-import {IsInt, IsOptional, IsString} from "class-validator";
+import {InputType, Field, Int} from '@nestjs/graphql';
+import {IsInt, IsNumber, IsOptional, IsString} from "class-validator";
+import {covering_type, sport_type} from "@prisma/client";
+import {District} from "../facility.types";
 
 @InputType()
 export class FacilitiesFilterInput {
@@ -10,24 +12,31 @@ export class FacilitiesFilterInput {
   readonly sortBy?: string;
 
   @IsOptional()
-  @IsString()
-  @Field({ nullable: true })
-  readonly sportType?: string;
+  @Field(() => [sport_type], {nullable: true})
+  readonly sportType: sport_type[];
+  // @Field(() => [String], { nullable: true })
+  // readonly sportType?: string[];
+
 
   @IsOptional()
-  @IsString()
-  @Field({ nullable: true })
-  readonly coveringType?: string;
+  @Field(() => [covering_type], {nullable: true})
+  readonly coveringType: covering_type[];
+
+  // @IsOptional()
+  // @IsString()
+  // @Field({ nullable: true })
+  // readonly coveringType?: string;
 
   @IsOptional()
   @IsString()
   @Field({ nullable: true })
   readonly facilityType?: string;
 
+
   @IsOptional()
-  @IsString()
-  @Field({ nullable: true })
-  readonly district?: string;
+  @IsNumber({},{each: true})
+  @Field(() => [Int], {nullable: true})
+  readonly districts?: number[];
 
   @IsOptional()
   @IsInt()

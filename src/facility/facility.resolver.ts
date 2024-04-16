@@ -12,6 +12,7 @@ import {PaginationArgs} from "../common/pagination/pagination.args";
 import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
+import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
 
 
 @Resolver(() => Facility)
@@ -78,7 +79,7 @@ export class FacilityResolver {
   }
 
 
-  //@UseGuards(GraphqlAuthCheck)
+  @UseGuards(GraphqlAuthCheck)
   @Query(() => FacilitiesResponse)
   async findAll(@Args('facilitiesFilterInput', {nullable: true}) facilitiesFilterInput: FacilitiesFilterInput,
                 @Args('paginationArgs', {nullable: true}) paginationArgs: PaginationArgs,
@@ -86,7 +87,7 @@ export class FacilityResolver {
     return await this.facilityService.findAll(facilitiesFilterInput, paginationArgs, context?.req?.user?.id);
   }
 
-  //@UseGuards(GraphqlAuthCheck)
+  @UseGuards(GraphqlAuthCheck)
   @Query(() => Facility, { name: 'facility' })
   async findOne(@Args('id', { type: () => Int }) id: number,
           @Context() context?: {req: Request}) {

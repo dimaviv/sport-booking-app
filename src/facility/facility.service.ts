@@ -227,24 +227,30 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
-      const { sortBy, sportType, coveringType, facilityType, district, ownerId, search } = filters;
+      const { sortBy, sportType, coveringType, facilityType, districts, ownerId, search } = filters;
       let { page, limit } = pagination;
 
       if (search) {
-       return this.fullTextSearchAll(filters, pagination)
+       return this.fullTextSearchAll(filters, pagination, userId)
       }
 
       const where = {
-        ...(sportType && { sportType }),
-        ...(coveringType && { coveringType }),
+        ...(coveringType && { coveringType: { in: coveringType } }),
         ...(facilityType && { facilityType }),
-        ...(district && { district }),
         ...(ownerId && { ownerId }),
+        ...(sportType && { sportType: { hasSome: sportType } }),
+        ...(districts && { districtId: { in: districts } }),
       };
+
       const [facilities, totalCount] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
           where,
           include: {
+            district:{
+              include:{
+                city:true
+              }
+            },
             images: {
               where: { isMain: true }
             },
@@ -263,19 +269,38 @@ export class FacilityService {
         this.prisma.facility.count({ where }),
       ]);
 
-      const aggregateRating = await this.ratingService.aggregateRating()
+      const userFavorites = userId ? await this.prisma.favorite.findMany({
+        where: {
+          userId: userId,
+          facilityId: { in: facilities.map(f => f.id) },
+        },
+      }) : [];
 
-      const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
+      // Map of facilityId to favorite status
+      const favoritesMap = userFavorites.reduce((map, fav) => {
+        map[fav.facilityId] = true;
+        return map;
+      }, {});
 
-      return {totalCount, facilities: facilitiesWithRating}
+      // Include the currentUserIsFavorite in each facility object
+      const facilitiesWithFavorites = facilities.map(facility => ({
+        ...facility,
+        currentUserIsFavorite: !!favoritesMap[facility.id], // Convert to boolean; true if facilityId is in favoritesMap, false otherwise
+      }));
+
+      // Assuming the rest of the logic for handling ratings is implemented correctly
+      const aggregateRating = await this.ratingService.aggregateRating();
+      const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
+      console.log(facilitiesWithRatingAndFavorites)
+      return { totalCount, facilities: facilitiesWithRatingAndFavorites };
 
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
 
-  async fullTextSearchAll(filters, pagination){
-    const { search, sportType, coveringType, facilityType, district } = filters;
+  async fullTextSearchAll(filters, pagination, userId){
+    const { search } = filters;
     let { page, limit } = pagination;
     const offset = page * limit - limit;
 
@@ -285,10 +310,6 @@ export class FacilityService {
         SELECT id, ts_rank_cd(search_vector, query) AS rank
         FROM "Facility", to_tsquery('russian', ${searchInput}) query
         WHERE search_vector @@ query
-         ${sportType ? Prisma.sql`AND "sportType" = ${sportType}::sport_type` : Prisma.empty}
-         ${coveringType ? Prisma.sql`AND "coveringType" = ${coveringType}::covering_type` : Prisma.empty}
-         ${facilityType ? Prisma.sql`AND "facilityType" = ${facilityType}::facility_type` : Prisma.empty}
-         ${district ? Prisma.sql`AND "district" = ${district}` : Prisma.empty}
         ORDER BY rank DESC
         LIMIT ${limit} OFFSET ${offset}`;
 
@@ -297,68 +318,96 @@ export class FacilityService {
 
     const facilities = await this.prisma.facility.findMany({
         where:{id:{in:facilityIds}},
-        include: {
-          images: {
-            where:{ isMain:true }
-          },
-          _count: {
-            select: { ratings: true },
-          },
+      include: {
+        district:{
+          include:{
+            city:true
+          }
         },
+        images: {
+          where: { isMain: true }
+        },
+        _count: {
+          select: { ratings: true },
+        },
+      },
       })
     // @ts-ignore
     facilities.sort((a, b) => facilityOrder.get(a.id) - facilityOrder.get(b.id));
 
-    const totalCount = await this.prisma.$queryRaw`
-        SELECT COUNT(*)
-        FROM "Facility", to_tsquery('russian', ${searchInput}) query
-        WHERE search_vector @@ query
-         ${sportType ? Prisma.sql`AND "sportType" = ${sportType}::sport_type` : Prisma.empty}
-         ${coveringType ? Prisma.sql`AND "coveringType" = ${coveringType}::covering_type` : Prisma.empty}
-         ${facilityType ? Prisma.sql`AND "facilityType" = ${facilityType}::facility_type` : Prisma.empty}
-         ${district ? Prisma.sql`AND "district" = ${district}` : Prisma.empty}
-      `;
-
-    const aggregateRating = await this.ratingService.aggregateRating()
-    const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
-
-    return {totalCount:Number(totalCount[0].count), facilities: facilitiesWithRating}
-  }
-
-  async findOne(id: number, userId: number) {
-    try {
-      const facility = await this.prisma.facility.findUnique({
-        where:{id},
-        include: {
-          images: true,
-          timeSlots: {
-            where:{
-              isActive: true
-            },
-            orderBy: [
-              {
-                dayOfWeek: 'asc',
-              },
-              {
-                startTime: 'asc',
-              },
-            ],
-          },
-          _count: {
-            select: { ratings: true },
-          },
+    // Fetch user favorites for these facilities if a userId is provided
+    let userFavorites = [];
+    if (userId) {
+      userFavorites = await this.prisma.favorite.findMany({
+        where: {
+          userId: userId,
+          facilityId: { in: facilityIds },
         },
       });
-      const aggregateRating = await this.ratingService.aggregateRating(facility.id);
-      let userRate = null
-      if (userId) userRate = await this.ratingService.getUserRate(facility.id, userId)
+    }
 
-      return  {
+    const favoriteSet = new Set(userFavorites.map(fav => fav.facilityId));
+
+    const facilitiesWithFavorites = facilities.map(facility => ({
+      ...facility,
+      currentUserIsFavorite: favoriteSet.has(facility.id),
+    }));
+
+    const totalCount = await this.prisma.$queryRaw`
+      SELECT COUNT(*)
+      FROM "Facility", to_tsquery('russian', ${searchInput}) query
+      WHERE search_vector @@ query`;
+
+    const aggregateRating = await this.ratingService.aggregateRating();
+    const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
+
+    return {totalCount: Number(totalCount[0].count), facilities: facilitiesWithRatingAndFavorites};
+  }
+
+  async findOne(id: number, userId: number = 0) {
+    try {
+      const [facility, isFavorite] = await this.prisma.$transaction([
+        this.prisma.facility.findUnique({
+          where: { id },
+          include: {
+            images: true,
+            timeSlots: {
+              where: {
+                isActive: true,
+              },
+              orderBy: [
+                {
+                  dayOfWeek: 'asc',
+                },
+                {
+                  startTime: 'asc',
+                },
+              ],
+            },
+            _count: {
+              select: { ratings: true },
+            },
+          },
+        }),
+        this.prisma.favorite.findFirst({
+          where: {
+            userId: userId,
+            facilityId: id,
+          },
+        })
+      ]);
+
+      const aggregateRating = await this.ratingService.aggregateRating(id);
+      let userRate = null;
+      if (userId) userRate = await this.ratingService.getUserRate(id, userId);
+
+      return {
         ...facility,
         ratingCount: aggregateRating[0]?._count?.id || 0,
         avgRating: aggregateRating[0]?._avg?.value || 0,
         currentUserRate: userRate,
-      }
+        currentUserIsFavorite: !!isFavorite,
+      };
     } catch (e) {
       throw new InternalException(e.message);
     }

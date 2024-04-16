@@ -1,6 +1,6 @@
 import {BadRequestException, forwardRef, Inject, Injectable} from '@nestjs/common';
-import { CreateRatingInput } from './dto/create-rating.input';
-import { UpdateRatingInput } from './dto/update-rating.input';
+import {CreateRatingInput} from './dto/create-rating.input';
+import {UpdateRatingInput} from './dto/update-rating.input';
 import {PrismaService} from "../prisma.service";
 import {FacilityService} from "../facility/facility.service";
 import {InternalException} from "../../exceptions/validation.exception";
@@ -49,7 +49,7 @@ export class RatingService {
 
   async getUserRate(facilityId, userId){
     try {
-      return await this.prisma.rating.findFirstOrThrow({where:{facilityId, userId}})
+      return await this.prisma.rating.findFirst({where: {facilityId, userId}})
     }catch (e) {
       throw new InternalException(e.message);
     }

@@ -1,7 +1,7 @@
-import {ObjectType, Field, Int, Float} from '@nestjs/graphql';
+import {ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import {User} from "../user/user.type";
 import {Rating} from "../rating/rating.type";
-import {Booking, BookingSlot} from "../booking/booking.types";
+import {Booking} from "../booking/booking.types";
 
 
 @ObjectType()
@@ -11,38 +11,56 @@ export class Count {
 }
 
 @ObjectType()
-export class Facility {
+export class City {
   @Field()
   id: number;
 
   @Field()
-  name?: string;
+  name: string;
+}
+
+@ObjectType()
+export class District {
+  @Field()
+  id: number;
 
   @Field()
-  district: string;
+  name: string;
+
+  @Field(() => City)
+  city: City;
+}
+
+@ObjectType()
+export class Facility {
+  @Field()
+  id: number;
+
+  @Field({ nullable: true })
+  name?: string;
 
   @Field()
   address: string;
 
-  @Field()
-  sportType?: string;
+  @Field(() => [String], { nullable: true })
+  sportType?: string[];
 
-  @Field()
+  @Field({ nullable: true })
   coveringType?: string;
 
-  @Field()
+  @Field({ nullable: true })
   facilityType?: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   description?: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   location?: string;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   minBookingTime?: number;
 
-  @Field({nullable: true})
+  @Field({ nullable: true })
   avgPrice?: number;
 
   @Field()
@@ -51,14 +69,17 @@ export class Facility {
   @Field(() => User)
   owner: User;
 
-  @Field(() => [Image], {nullable: true})
+  @Field(() => District)
+  district: District;
+
+  @Field(() => City)
+  city: City;
+
+  @Field(() => [Image], { nullable: true })
   images?: Image[];
 
-  @Field(() => [Rating], )
+  @Field(() => [Rating], { nullable: true })
   ratings?: Rating[];
-
-  @Field(() => Count, )
-  _count?: Count;
 
   @Field()
   ratingCount: number;
@@ -66,8 +87,11 @@ export class Facility {
   @Field()
   avgRating: number;
 
-  @Field(() => Rating, {nullable: true})
-  currentUserRate: Rating;
+  @Field(() => Rating, { nullable: true })
+  currentUserRate?: Rating;
+
+  @Field(() => Boolean, { nullable: true })
+  currentUserIsFavorite?: Boolean;
 
   @Field(() => [TimeSlot])
   timeSlots: TimeSlot[];
@@ -75,6 +99,7 @@ export class Facility {
   @Field(() => [Booking])
   bookings: Booking[];
 }
+
 
 @ObjectType()
 export class TimeSlot {

@@ -30,6 +30,12 @@ export class Booking {
   @Field(() => Facility)
   facility: Facility;
 
+  @Field()
+  createdAt: Date;
+
+  @Field()
+  updatedAt: Date;
+
 }
 
 @ObjectType()

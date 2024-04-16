@@ -9,11 +9,13 @@ input AddOwnerInfoInput {
 
 type Booking {
   bookingSlots: [BookingSlot!]!
+  createdAt: DateTime!
   facility: Facility!
   facilityId: Int!
   id: Int!
   price: Float
   status: String
+  updatedAt: DateTime!
   user: User!
   userId: Int!
 }
@@ -31,8 +33,9 @@ type BookingsResponse {
   totalCount: Float!
 }
 
-type Count {
-  ratings: Float!
+type City {
+  id: Float!
+  name: String!
 }
 
 input CreateBookingInput {
@@ -44,12 +47,12 @@ input CreateFacilityInput {
   address: String!
   coveringType: covering_type!
   description: String
-  district: String
+  districtId: Float!
   facilityType: facility_type!
   location: String
   minBookingTime: Float
   name: String!
-  sportType: sport_type!
+  sportType: [sport_type!]!
 }
 
 type CreateFacilityResponse {
@@ -75,14 +78,20 @@ A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date
 """
 scalar DateTime
 
+type District {
+  city: City!
+  id: Float!
+  name: String!
+}
+
 input FacilitiesFilterInput {
-  coveringType: String
-  district: String
+  coveringType: [covering_type!]
+  districts: [Int!]
   facilityType: String
   ownerId: Float
   search: String
   sortBy: String
-  sportType: String
+  sportType: [sport_type!]
 }
 
 type FacilitiesResponse {
@@ -91,26 +100,27 @@ type FacilitiesResponse {
 }
 
 type Facility {
-  _count: Count!
   address: String!
   avgPrice: Float
   avgRating: Float!
   bookings: [Booking!]!
-  coveringType: String!
+  city: City!
+  coveringType: String
+  currentUserIsFavorite: Boolean
   currentUserRate: Rating
   description: String
-  district: String!
-  facilityType: String!
+  district: District!
+  facilityType: String
   id: Float!
   images: [Image!]
   location: String
   minBookingTime: Float
-  name: String!
+  name: String
   owner: User!
   ownerId: Float!
   ratingCount: Float!
-  ratings: [Rating!]!
-  sportType: String!
+  ratings: [Rating!]
+  sportType: [String!]
   timeSlots: [TimeSlot!]!
 }
 
@@ -236,13 +246,13 @@ input UpdateFacilityInput {
   address: String
   coveringType: covering_type
   description: String
-  district: String
+  districtId: Float
   facilityType: facility_type
   id: Float!
   location: String
   minBookingTime: Float
   name: String
-  sportType: sport_type
+  sportType: [sport_type!]
 }
 
 type UpdateFacilityResponse {
