@@ -34,6 +34,7 @@ type BookingsResponse {
 }
 
 type City {
+  districts: [District]
   id: Float!
   name: String!
 }
@@ -85,6 +86,7 @@ type District {
 }
 
 input FacilitiesFilterInput {
+  cityId: Float
   coveringType: [covering_type!]
   districts: [Int!]
   facilityType: String
@@ -176,6 +178,8 @@ type Query {
   facility(id: Int!): Facility!
   findAll(facilitiesFilterInput: FacilitiesFilterInput, paginationArgs: PaginationArgs): FacilitiesResponse!
   findAllBookings(paginationArgs: PaginationArgs): BookingsResponse!
+  findAllCities: [City!]!
+  findAllDistricts(cityId: Float!): [District!]!
   getByValue(name: String!): RoleResponse!
   getProfile: User!
   getUserFavorites(paginationArgs: PaginationArgs): FacilitiesResponse!

@@ -9,7 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-import { Prisma } from '@prisma/client'
+
 
 @Injectable()
 export class FacilityService {
@@ -227,7 +227,7 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
-      const { sortBy, sportType, coveringType, facilityType, districts, ownerId, search } = filters;
+      const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search } = filters;
       let { page, limit } = pagination;
 
       if (search) {
@@ -240,6 +240,7 @@ export class FacilityService {
         ...(ownerId && { ownerId }),
         ...(sportType && { sportType: { hasSome: sportType } }),
         ...(districts && { districtId: { in: districts } }),
+        ...(cityId && { district: { cityId } }),
       };
 
       const [facilities, totalCount] = await this.prisma.$transaction([
@@ -288,12 +289,11 @@ export class FacilityService {
         currentUserIsFavorite: !!favoritesMap[facility.id], // Convert to boolean; true if facilityId is in favoritesMap, false otherwise
       }));
 
-      // Assuming the rest of the logic for handling ratings is implemented correctly
+
       const aggregateRating = await this.ratingService.aggregateRating();
       const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
-      console.log(facilitiesWithRatingAndFavorites)
-      return { totalCount, facilities: facilitiesWithRatingAndFavorites };
 
+      return { totalCount, facilities: facilitiesWithRatingAndFavorites };
     } catch (e) {
       throw new InternalException(e.message);
     }

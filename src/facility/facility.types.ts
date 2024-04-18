@@ -2,6 +2,7 @@ import {ObjectType, Field, Int, Float } from '@nestjs/graphql';
 import {User} from "../user/user.type";
 import {Rating} from "../rating/rating.type";
 import {Booking} from "../booking/booking.types";
+import {City, District} from "../location/location.types";
 
 
 @ObjectType()
@@ -10,26 +11,6 @@ export class Count {
   ratings: number;
 }
 
-@ObjectType()
-export class City {
-  @Field()
-  id: number;
-
-  @Field()
-  name: string;
-}
-
-@ObjectType()
-export class District {
-  @Field()
-  id: number;
-
-  @Field()
-  name: string;
-
-  @Field(() => City)
-  city: City;
-}
 
 @ObjectType()
 export class Facility {

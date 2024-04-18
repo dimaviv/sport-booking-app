@@ -14,6 +14,7 @@ import { FacilityModule } from './facility/facility.module';
 import { RatingModule } from './rating/rating.module';
 import { BookingModule } from './booking/booking.module';
 import {GraphQLError} from "graphql/index";
+import { LocationModule } from './location/location.module';
 
 
 interface CustomError extends Error {
@@ -67,6 +68,7 @@ interface CustomError extends Error {
     FacilityModule,
     RatingModule,
     BookingModule,
+    LocationModule,
     ],
   controllers: [],
   providers: [GoogleStrategy],
