@@ -9,6 +9,8 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
+import { Prisma } from '@prisma/client'
+
 
 
 @Injectable()
@@ -300,7 +302,7 @@ export class FacilityService {
   }
 
   async fullTextSearchAll(filters, pagination, userId){
-    const { search } = filters;
+    const { search, cityId } = filters;
     let { page, limit } = pagination;
     const offset = page * limit - limit;
 
@@ -316,22 +318,32 @@ export class FacilityService {
     const facilityOrder = new Map(rawFacilities.map((f, index) => [f.id, index]));
     const facilityIds: any = Array.from(facilityOrder.keys());
 
-    const facilities = await this.prisma.facility.findMany({
-        where:{id:{in:facilityIds}},
-      include: {
-        district:{
-          include:{
-            city:true
-          }
+    const where = {
+      ...(cityId && { district: { cityId } }),
+      ...(facilityIds && { id:{in:facilityIds} }),
+    };
+
+
+    const [facilities, totalCount] = await this.prisma.$transaction([
+     this.prisma.facility.findMany({
+        where,
+        include: {
+          district:{
+            include:{
+              city:true
+            }
+          },
+          images: {
+            where: { isMain: true }
+          },
+          _count: {
+            select: { ratings: true },
+          },
         },
-        images: {
-          where: { isMain: true }
-        },
-        _count: {
-          select: { ratings: true },
-        },
-      },
-      })
+      }),
+      this.prisma.facility.count({ where }),
+    ]);
+
     // @ts-ignore
     facilities.sort((a, b) => facilityOrder.get(a.id) - facilityOrder.get(b.id));
 
@@ -353,15 +365,10 @@ export class FacilityService {
       currentUserIsFavorite: favoriteSet.has(facility.id),
     }));
 
-    const totalCount = await this.prisma.$queryRaw`
-      SELECT COUNT(*)
-      FROM "Facility", to_tsquery('russian', ${searchInput}) query
-      WHERE search_vector @@ query`;
-
     const aggregateRating = await this.ratingService.aggregateRating();
     const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
 
-    return {totalCount: Number(totalCount[0].count), facilities: facilitiesWithRatingAndFavorites};
+    return {totalCount: Number(totalCount), facilities: facilitiesWithRatingAndFavorites};
   }
 
   async findOne(id: number, userId: number = 0) {
