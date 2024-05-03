@@ -373,7 +373,15 @@ export class FacilityService {
           where: { id },
           include: {
             images: true,
-            district: true,
+            district: {
+              include:{
+                city: {
+                  include:{
+                    districts: true
+                  }
+                },
+              }
+            },
             timeSlots: {
               where: {
                 isActive: true,
