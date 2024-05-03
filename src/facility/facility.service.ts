@@ -56,7 +56,6 @@ export class FacilityService {
     }
   }
 
-
   async createSchedule(createScheduleInput: CreateScheduleInput, userId: number) {
     const { facilityId, daysOfWeek, price, startTime, endTime } = createScheduleInput;
 
@@ -110,7 +109,6 @@ export class FacilityService {
       throw new InternalException(e.message);
     }
   }
-
 
   private generateTimeSlots(startTime: string, endTime: string, daysOfWeek: number[]) {
 
@@ -279,18 +277,15 @@ export class FacilityService {
         },
       }) : [];
 
-      // Map of facilityId to favorite status
       const favoritesMap = userFavorites.reduce((map, fav) => {
         map[fav.facilityId] = true;
         return map;
       }, {});
 
-      // Include the currentUserIsFavorite in each facility object
       const facilitiesWithFavorites = facilities.map(facility => ({
         ...facility,
-        currentUserIsFavorite: !!favoritesMap[facility.id], // Convert to boolean; true if facilityId is in favoritesMap, false otherwise
+        currentUserIsFavorite: !!favoritesMap[facility.id],
       }));
-
 
       const aggregateRating = await this.ratingService.aggregateRating();
       const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
@@ -378,6 +373,7 @@ export class FacilityService {
           where: { id },
           include: {
             images: true,
+            district: true,
             timeSlots: {
               where: {
                 isActive: true,
