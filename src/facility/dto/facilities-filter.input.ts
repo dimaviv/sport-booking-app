@@ -47,4 +47,16 @@ export class FacilitiesFilterInput {
   @Field({ nullable: true })
   readonly search?: string;
 
+
+  @IsOptional()
+  @IsInt()
+  @Field({ nullable: true })
+  readonly minPrice?: number;
+
+
+  @IsOptional()
+  @IsInt()
+  @Field({ nullable: true })
+  readonly maxPrice?: number;
+
 }

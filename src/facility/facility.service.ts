@@ -227,7 +227,7 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
-      const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search } = filters;
+      const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search, minPrice, maxPrice } = filters;
       let { page, limit } = pagination;
 
       if (search) {
@@ -241,13 +241,26 @@ export class FacilityService {
         ...(sportType && { sportType: { hasSome: sportType } }),
         ...(districts && { districtId: { in: districts } }),
         ...(cityId && { district: { cityId } }),
+        ...(minPrice !== undefined || maxPrice !== undefined) && { avgPrice: { gte: minPrice || 0, lte: maxPrice || 999999999 } },
       };
+
+
+      let orderBy = [];
+      if (sortBy === 'price_asc') {
+        orderBy.push({ avgPrice: 'asc' });
+      }
+      if (sortBy === 'price_desc') {
+        orderBy.push({ avgPrice: 'desc' });
+      }
+      else {
+        orderBy.push({ ratings: { _count: 'desc' } });  // Default sort by ratings count
+      }
 
       const [facilities, totalCount] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
           where,
           include: {
-            district:{
+            district: {
               include:{
                 city:true
               }
@@ -259,11 +272,7 @@ export class FacilityService {
               select: { ratings: true },
             },
           },
-          orderBy: {
-            ratings: {
-              _count: 'desc'
-            }
-          },
+          orderBy,
           skip: page * limit - limit,
           take: limit,
         }),
