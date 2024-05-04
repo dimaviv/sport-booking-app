@@ -132,12 +132,24 @@ export class Image {
 }
 
 @ObjectType()
+export class PriceRange {
+  @Field(() => Number)
+  min: number;
+
+  @Field(() => Number)
+  max: number;
+}
+
+@ObjectType()
 export class FacilitiesResponse {
   @Field(() => [Facility])
   facilities: Facility[];
 
   @Field()
   totalCount: number;
+
+  @Field()
+  priceRange: PriceRange;
 }
 
 @ObjectType()

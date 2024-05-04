@@ -9,7 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-import { Prisma } from '@prisma/client'
+
 
 
 
@@ -230,8 +230,9 @@ export class FacilityService {
       const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search, minPrice, maxPrice } = filters;
       let { page, limit } = pagination;
 
-      if (search) {
-       return this.fullTextSearchAll(filters, pagination, userId)
+      let searchIds;
+      if (search){
+         searchIds = await this.fullTextSearch(search)
       }
 
       const where = {
@@ -242,8 +243,8 @@ export class FacilityService {
         ...(districts && { districtId: { in: districts } }),
         ...(cityId && { district: { cityId } }),
         ...(minPrice !== undefined || maxPrice !== undefined) && { avgPrice: { gte: minPrice || 0, lte: maxPrice || 999999999 } },
+        ...(searchIds && { id:{in:searchIds} }),
       };
-
 
       let orderBy = [];
       if (sortBy === 'price_asc') {
@@ -256,7 +257,7 @@ export class FacilityService {
         orderBy.push({ ratings: { _count: 'desc' } });  // Default sort by ratings count
       }
 
-      const [facilities, totalCount] = await this.prisma.$transaction([
+      const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
           where,
           include: {
@@ -277,6 +278,15 @@ export class FacilityService {
           take: limit,
         }),
         this.prisma.facility.count({ where }),
+        this.prisma.facility.aggregate({
+          where,
+          _min: {
+            avgPrice: true,
+          },
+          _max: {
+            avgPrice: true,
+          }
+        }),
       ]);
 
       const userFavorites = userId ? await this.prisma.favorite.findMany({
@@ -299,80 +309,26 @@ export class FacilityService {
       const aggregateRating = await this.ratingService.aggregateRating();
       const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
 
-      return { totalCount, facilities: facilitiesWithRatingAndFavorites };
+      const priceRange = {min: priceRangeAggr._min.avgPrice, max: priceRangeAggr._max.avgPrice}
+      return { totalCount, priceRange, facilities: facilitiesWithRatingAndFavorites };
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
 
-  async fullTextSearchAll(filters, pagination, userId){
-    const { search, cityId } = filters;
-    let { page, limit } = pagination;
-    const offset = page * limit - limit;
-
+  async fullTextSearch(search){
     const searchInput = search.split(' ').join(' | ');
 
     const rawFacilities: any = await this.prisma.$queryRaw`
         SELECT id, ts_rank_cd(search_vector, query) AS rank
         FROM "Facility", to_tsquery('russian', ${searchInput}) query
         WHERE search_vector @@ query
-        ORDER BY rank DESC
-        LIMIT ${limit} OFFSET ${offset}`;
+        ORDER BY rank DESC`;
 
     const facilityOrder = new Map(rawFacilities.map((f, index) => [f.id, index]));
     const facilityIds: any = Array.from(facilityOrder.keys());
 
-    const where = {
-      ...(cityId && { district: { cityId } }),
-      ...(facilityIds && { id:{in:facilityIds} }),
-    };
-
-
-    const [facilities, totalCount] = await this.prisma.$transaction([
-     this.prisma.facility.findMany({
-        where,
-        include: {
-          district:{
-            include:{
-              city:true
-            }
-          },
-          images: {
-            where: { isMain: true }
-          },
-          _count: {
-            select: { ratings: true },
-          },
-        },
-      }),
-      this.prisma.facility.count({ where }),
-    ]);
-
-    // @ts-ignore
-    facilities.sort((a, b) => facilityOrder.get(a.id) - facilityOrder.get(b.id));
-
-    // Fetch user favorites for these facilities if a userId is provided
-    let userFavorites = [];
-    if (userId) {
-      userFavorites = await this.prisma.favorite.findMany({
-        where: {
-          userId: userId,
-          facilityId: { in: facilityIds },
-        },
-      });
-    }
-
-    const favoriteSet = new Set(userFavorites.map(fav => fav.facilityId));
-
-    const facilitiesWithFavorites = facilities.map(facility => ({
-      ...facility,
-      currentUserIsFavorite: favoriteSet.has(facility.id),
-    }));
-
-    const aggregateRating = await this.ratingService.aggregateRating();
-    const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
-
-    return {totalCount: Number(totalCount), facilities: facilitiesWithRatingAndFavorites};
+    return facilityIds;
   }
 
   async findOne(id: number, userId: number = 0) {
