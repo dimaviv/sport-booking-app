@@ -15,6 +15,7 @@ import { RatingModule } from './rating/rating.module';
 import { BookingModule } from './booking/booking.module';
 import {GraphQLError} from "graphql/index";
 import { LocationModule } from './location/location.module';
+import { PaymentModule } from './payment/payment.module';
 
 
 interface CustomError extends Error {
@@ -56,6 +57,7 @@ interface CustomError extends Error {
           playground: true,
           autoSchemaFile: path.join(process.cwd(), 'src/schema.gql'),
           sortSchema: true,
+          installSubscriptionHandlers: true,
 
         }
       }
@@ -69,6 +71,7 @@ interface CustomError extends Error {
     RatingModule,
     BookingModule,
     LocationModule,
+    PaymentModule,
     ],
   controllers: [],
   providers: [GoogleStrategy],

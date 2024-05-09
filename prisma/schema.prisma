@@ -39,18 +39,31 @@ model BookingSlot {
   @@unique([bookingId, timeSlotId])
 }
 
-model Booking {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  status    String?
-  price     Float?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Payment {
+  id             Int             @id @default(autoincrement())
+  amount         Decimal         @db.Decimal(8, 2)
+  currency       Currency        @default(UAH)
+  bookingId      Int
+  booking        Booking         @relation(fields: [bookingId], references: [id])
+  status         PaymentStatus   @default(pending)
+  orderId        String
+  transactionId  Decimal?        @db.Decimal(10, 0)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
 
+model Booking {
+  id           Int            @id @default(autoincrement())
+  userId       Int
+  status       BookingStatus  @default(pending)
+  price        Decimal?       @db.Decimal(8, 2)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
   bookingSlots BookingSlot[]
-  user         User          @relation(fields: [userId], references: [id])
-  facility     Facility      @relation(fields: [facilityId], references: [id])
+  user         User           @relation(fields: [userId], references: [id])
+  facility     Facility       @relation(fields: [facilityId], references: [id])
   facilityId   Int
+  Payment      Payment[]
 }
 
 model Role {
@@ -62,10 +75,10 @@ model Role {
 }
 
 model UsersRoles {
-  userId Int
-  roleId Int
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  userId    Int
+  roleId    Int
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }
@@ -93,15 +106,15 @@ model User {
   UserOwner UserOwner?
   Rating    Rating[]
   Facility  Facility[]
+
 }
 
 model UserOwner {
-  id               Int     @id @default(autoincrement())
-  phone            String
-  organizationName String?
-
-  user   User @relation(fields: [userId], references: [id])
-  userId Int  @unique
+  id                Int     @id @default(autoincrement())
+  phone             String
+  organizationName  String?
+  user              User @relation(fields: [userId], references: [id])
+  userId            Int  @unique
 }
 
 model Facility {
@@ -119,51 +132,44 @@ model Facility {
   districtId     Int
   isWorking      Boolean        @default(false)
 
-
-  owner          User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  district       District       @relation(fields: [districtId], references: [id]) // New relation to District
-  users          User[]         @relation("UserFacilities")
-  favorites      Favorite[]
-  search_vector  Unsupported("TSVECTOR")?
-  timeSlots      TimeSlot[]
-  bookings       Booking[]
-  ratings        Rating[]
-  images         Image[]
-
+  owner         User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  district      District                 @relation(fields: [districtId], references: [id]) // New relation to District
+  users         User[]                   @relation("UserFacilities")
+  favorites     Favorite[]
+  search_vector Unsupported("TSVECTOR")?
+  timeSlots     TimeSlot[]
+  bookings      Booking[]
+  ratings       Rating[]
+  images        Image[]
 
   @@index([search_vector])
 }
 
 model City {
-  id         Int        @id @default(autoincrement())
-  name       String
-  districts  District[] // Relation to Districts
+  id        Int        @id @default(autoincrement())
+  name      String
+  districts District[] // Relation to Districts
 
   @@index([name], name: "idx_city_name")
 }
 
-
 model District {
-  id       Int        @id @default(autoincrement())
-  name     String
-  cityId   Int
-
-  city     City       @relation(fields: [cityId], references: [id])
-  facilities Facility[] // Relation to Facilities
+  id          Int    @id @default(autoincrement())
+  name        String
+  cityId      Int
+  city        City       @relation(fields: [cityId], references: [id])
+  facilities  Facility[]
 
   @@index([name], name: "idx_district_name")
   @@index([cityId], name: "idx_district_cityId")
 }
 
-
-
 model Favorite {
-  id         Int @id @default(autoincrement())
-  userId     Int
-  facilityId Int
-
-  user     User     @relation(fields: [userId], references: [id])
-  facility Facility @relation(fields: [facilityId], references: [id])
+  id          Int @id @default(autoincrement())
+  userId      Int
+  facilityId  Int
+  user        User     @relation(fields: [userId], references: [id])
+  facility    Facility @relation(fields: [facilityId], references: [id])
 
   @@unique([userId, facilityId])
 }
@@ -215,7 +221,7 @@ enum TimeSlotStatus {
   unavailable
 }
 
-enum BookingStatuses {
+enum BookingStatus {
   approved
   unapproved
   paid
@@ -225,3 +231,19 @@ enum BookingStatuses {
   completed
   failed
 }
+
+enum PaymentStatus {
+  success
+  pending
+  failure
+  error
+  reversed
+}
+
+enum Currency {
+  UAH
+  USD
+  EUR
+}
+
+

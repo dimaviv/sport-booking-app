@@ -2,9 +2,9 @@ import {Args, Context, Mutation, Query, Resolver} from '@nestjs/graphql';
 import {AuthService} from "./auth.service";
 import {LoginResponse, RegisterResponse} from "./types";
 import {LoginDto, RegisterDto} from "./dto";
-import {BadRequestException, UnauthorizedException} from "@nestjs/common";
+import {BadRequestException} from "@nestjs/common";
 import {Response, Request} from "express";
-import {GraphQLError} from "graphql/index";
+
 
 
 @Resolver()

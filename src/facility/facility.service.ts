@@ -259,11 +259,14 @@ export class FacilityService {
 
       const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
-          where,
+          where: {
+            ...where,
+            avgPrice: { not: null } // Exclude facilities with `avgPrice` as null
+          },
           include: {
             district: {
-              include:{
-                city:true
+              include: {
+                city: true
               }
             },
             images: {
@@ -273,13 +276,24 @@ export class FacilityService {
               select: { ratings: true },
             },
           },
-          orderBy,
+          orderBy: [
+            { isWorking: 'desc' },
+            ...orderBy
+          ],
           skip: page * limit - limit,
           take: limit,
         }),
-        this.prisma.facility.count({ where }),
+        this.prisma.facility.count({
+          where: {
+            ...where,
+            avgPrice: { not: null }
+          }
+        }),
         this.prisma.facility.aggregate({
-          where,
+          where: {
+            ...where,
+            avgPrice: { not: null }
+          },
           _min: {
             avgPrice: true,
           },

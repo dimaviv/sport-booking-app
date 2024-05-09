@@ -61,6 +61,17 @@ type CreateFacilityResponse {
   photo: Image
 }
 
+input CreatePaymentInput {
+  """Amount of money to be paid"""
+  amount: Float!
+
+  """ID of the booking"""
+  bookingId: Int!
+
+  """Order ID from LiqPay"""
+  orderId: String!
+}
+
 input CreateRatingInput {
   facilityId: Float!
   value: Float!
@@ -90,6 +101,8 @@ input FacilitiesFilterInput {
   coveringType: [covering_type!]
   districts: [Int!]
   facilityType: String
+  maxPrice: Float
+  minPrice: Float
   ownerId: Float
   search: String
   sortBy: String
@@ -98,6 +111,7 @@ input FacilitiesFilterInput {
 
 type FacilitiesResponse {
   facilities: [Facility!]!
+  priceRange: PriceRange!
   totalCount: Float!
 }
 
@@ -152,6 +166,7 @@ type Mutation {
   create(roleInput: RoleDto!): RoleResponse!
   createBooking(createBookingInput: CreateBookingInput!): Booking!
   createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): CreateFacilityResponse!
+  createPayment(createPaymentInput: CreatePaymentInput!): Payment!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   createSchedule(createScheduleInput: CreateScheduleInput!): [TimeSlot!]!
   googleAuth(token: String!): LoginResponse!
@@ -172,6 +187,24 @@ type Mutation {
 input PaginationArgs {
   limit: Int!
   page: Int!
+}
+
+type Payment {
+  amount: Float!
+  booking: Booking!
+  bookingId: Int!
+  createdAt: DateTime!
+  currency: String!
+  id: Int!
+  orderId: String!
+  status: String!
+  transactionId: Float
+  updatedAt: DateTime!
+}
+
+type PriceRange {
+  max: Float!
+  min: Float!
 }
 
 type Query {

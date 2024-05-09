@@ -4,10 +4,13 @@ import * as cookieParser from 'cookie-parser'
 import * as graphqlUploadExpress from 'graphql-upload/graphqlUploadExpress.js'
 import {ValidationPipe} from "@nestjs/common";
 import {GqlCustomExceptionFilter} from "../exceptions/graphql.exception";
-
+import * as bodyParser from 'body-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(bodyParser.urlencoded({ extended: true }));
+
   app.enableCors({
     origin: `${process.env.CLIENT_URL}`,
     credentials:true,
