@@ -310,7 +310,7 @@ input UpdateTimeSlotsInput {
 }
 
 input UpdateUserDto {
-  dateOfBirth: String
+  dateOfBirth: DateTime
   fullname: String
 }
 

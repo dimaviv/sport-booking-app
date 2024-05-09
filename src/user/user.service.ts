@@ -136,7 +136,6 @@ export class UserService {
     }
 
 
-
     async addOwnerInfo(ownerInfo: AddOwnerInfoInput, userId: number) {
         try {
             const userOwner = await this.prisma.userOwner.create({data: {...ownerInfo, userId},})
@@ -229,8 +228,7 @@ export class UserService {
             if (avatarFile) {
                 updateData.avatar = await this.fileService.saveAvatar(avatarFile)
             }
-            updateData.dateOfBirth = new Date(updateData.dateOfBirth)
-            console.log(updateData)
+
             return await this.prisma.user.update({
                 where: {id: userId},
                 data: {
