@@ -129,6 +129,7 @@ type Facility {
   facilityType: String
   id: Float!
   images: [Image!]
+  isWorking: Boolean
   location: String
   minBookingTime: Float
   name: String
