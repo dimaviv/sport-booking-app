@@ -20,7 +20,6 @@ export class UserService {
     ) {}
 
 
-
     async getUserFavorites(userId: number, pagination) {
         try {
             let { page, limit } = pagination;
@@ -75,7 +74,6 @@ export class UserService {
         }
     }
 
-
     async addFavorite(userId: number, facilityId: number): Promise<boolean> {
         try {
 
@@ -106,7 +104,6 @@ export class UserService {
         }
     }
 
-
     async removeFavorite(userId: number, facilityId: number): Promise<boolean> {
         try {
             const favorite = await this.prisma.favorite.findFirst({
@@ -134,7 +131,6 @@ export class UserService {
             throw new InternalServerErrorException(err.message);
         }
     }
-
 
     async addOwnerInfo(ownerInfo: AddOwnerInfoInput, userId: number) {
         try {
@@ -243,11 +239,10 @@ export class UserService {
 
     async getProfile(userId:number) {
         try {
-            const user = await this.prisma.user.findUnique({where:{id:userId}})
+            const user = await this.prisma.user.findUnique({where:{id:userId}, include: {UserOwner: true}})
             if (!user) throw new BadRequestException('User not found');
 
-            return user
-
+            return {...user, userOwner: user.UserOwner}
         } catch (err) {
             throw new InternalException(err.message);
         }
@@ -256,5 +251,34 @@ export class UserService {
     async findUserById(id: number){
         return this.prisma.user.findUnique({where: {id}})
     }
+
+    async verifyEmailToken(token: string): Promise<boolean> {
+        try {
+
+            const user = await this.prisma.user.findUnique({
+                where: { activationLink: token },
+            });
+
+            if (!user) {
+                throw new BadRequestException('Invalid or expired token.');
+            }
+
+            if (user.isActivated) {
+                return false;
+            }
+
+            await this.prisma.user.update({
+                where: { id: user.id },
+                data: { isActivated: true },
+            });
+
+            return true;
+        } catch (error) {
+            console.error('Error verifying email token:', error);
+            throw new BadRequestException('Invalid or expired token.');
+        }
+    }
+
+
 
 }
