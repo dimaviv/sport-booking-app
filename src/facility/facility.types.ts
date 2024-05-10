@@ -74,11 +74,15 @@ export class Facility {
   @Field(() => Boolean, { nullable: true })
   currentUserIsFavorite?: Boolean;
 
+  @Field(() => Boolean, { nullable: true })
+  isWorking?: Boolean;
+
   @Field(() => [TimeSlot])
   timeSlots: TimeSlot[];
 
   @Field(() => [Booking])
   bookings: Booking[];
+
 }
 
 
