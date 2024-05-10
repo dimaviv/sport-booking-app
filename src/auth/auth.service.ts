@@ -140,8 +140,10 @@ export class AuthService {
             },
         });
 
-        const activationURL = process.env.API_URL+'users/activate/' + activationLink
-        //await this.mailService.sendActivationMail(user.email, activationURL)
+        const activationURL = `${process.env.API_URL}/user/verify-email?token=${activationLink}`;
+        console.log(activationURL);
+        await this.mailService.sendActivationMail(user.email, activationURL);
+
 
         return this.issueTokens(user, response);
     }

@@ -1,26 +1,26 @@
-import {Controller, Get, UseGuards, Req, Res} from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport'
-import {AuthService} from "./auth.service";
+import { Controller, Get, Query, Res, HttpStatus } from '@nestjs/common';
+import { Response } from 'express';
+import { UserService } from './user.service';
 
-@Controller('auth')
-export class AuthController {
-    constructor(private readonly authService: AuthService) { }
+@Controller('user')
+export class UserController {
+    constructor(private readonly userService: UserService) {}
 
-    @Get('/google/callback')
-    @UseGuards(AuthGuard('google'))
-    async googleAuthRedirect(@Req() req, @Res() res) {
+    @Get('verify-email')
+    async verifyEmail(
+        @Query('token') token: string,
+        @Res() res: Response
+    ) {
+        try {
+            const result = await this.userService.verifyEmailToken(token);
 
-        const user = await this.authService.googleAuth(req, res)
-        res.redirect(process.env.APP_URL)
-        return user
-    }
-
-    @Get('/facebook/callback')
-    @UseGuards(AuthGuard('facebook'))
-    async facebookAuthRedirect(@Req() req, @Res() res) {
-
-        const user = await this.authService.facebookAuth(req, res)
-        res.redirect(process.env.APP_URL)
-        return user
+            if (result) {
+                return res.redirect(`${process.env.APP_URL}/email-verification-success`);
+            } else {
+                res.status(HttpStatus.BAD_REQUEST).json({ message: 'Invalid or expired token.' });
+            }
+        } catch (error) {
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error.', error });
+        }
     }
 }

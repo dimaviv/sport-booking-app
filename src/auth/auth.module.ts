@@ -14,7 +14,7 @@ import {RatingModule} from "../rating/rating.module";
 
 @Module({
   providers: [AuthResolver, AuthService, MailService, FilesService, UserService,
-    JwtService, PrismaService, RolesService,GoogleStrategy, FacebookStrategy],
+    JwtService, PrismaService, RolesService, GoogleStrategy, FacebookStrategy],
   controllers: [AuthController],
   imports: [
     RatingModule,
