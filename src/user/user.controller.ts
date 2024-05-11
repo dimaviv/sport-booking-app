@@ -27,14 +27,14 @@ export class UserController {
                     console.log(process.env.ANDROID_PACKAGE_NAME)
                     console.log(process.env.IOS_STORE_LINK)
 
-                    return deeplink({
+                    const dp = deeplink({
                         fallback: `${process.env.APP_URL}/mobile-app-download`,
                         android_package_name: `${process.env.ANDROID_PACKAGE_NAME}`,
                         ios_store_link: `${process.env.IOS_STORE_LINK}`,
                         // delay: 1000,
                         // callback: null,
                     })(req, res, next);
-
+                    return dp
                 } else {
                     return res.redirect(`${process.env.APP_URL}/email-verification-success`);
                 }

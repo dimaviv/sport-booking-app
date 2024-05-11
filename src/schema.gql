@@ -281,16 +281,15 @@ input UpdateBookingInput {
 }
 
 input UpdateFacilityInput {
-  address: String
-  coveringType: covering_type
+  address: String!
+  coveringType: covering_type!
   description: String
-  districtId: Float
-  facilityType: facility_type
+  facilityType: facility_type!
   id: Float!
-  location: String
+  isWorking: Boolean
   minBookingTime: Float
-  name: String
-  sportType: [sport_type!]
+  name: String!
+  sportType: [sport_type!]!
 }
 
 type UpdateFacilityResponse {
