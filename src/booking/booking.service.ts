@@ -2,10 +2,7 @@ import {forwardRef, Inject, Injectable} from '@nestjs/common';
 import { CreateBookingInput } from './dto/create-booking.input';
 import { UpdateBookingInput } from './dto/update-booking.input';
 import {PrismaService} from "../prisma.service";
-import {RatingService} from "../rating/rating.service";
-import {FilesService} from "../files/files.service";
-import {Booking} from "./booking.types";
-import {log} from "util";
+
 
 @Injectable()
 export class BookingService {
@@ -25,13 +22,14 @@ export class BookingService {
           userId: userId,
         },
         include: {
-          facility: true,
+          facility: {include: {images: true}},
           bookingSlots: {
             include: {
               timeSlot: true,
             },
           },
         },
+        orderBy: {id: 'desc',},
         skip: offset,
         take: limit,
       }),
@@ -42,7 +40,15 @@ export class BookingService {
       }),
     ]);
 
-    return { totalCount, bookings };
+    const currentDate = new Date()
+
+    const updatedBookings = bookings.map(async booking => {
+      const timeSlots = booking.bookingSlots.map(slot => slot.timeSlot);
+      const { startTime, endTime } = await this.getCorrectBookingTimes(currentDate, timeSlots);
+      return { ...booking, startTime, endTime };
+    });
+
+    return { totalCount, bookings: updatedBookings };
   }
 
 
@@ -71,6 +77,7 @@ export class BookingService {
           id: true,
           price: true,
           startTime: true,
+          dayOfWeek: true,
           endTime: true,
         },
         orderBy: [{dayOfWeek: 'asc',}, {startTime: 'asc',},],
@@ -116,14 +123,19 @@ export class BookingService {
         data: bookingSlotsData,
       });
 
-      return prisma.booking.findUnique({
+      const createdBooking = await prisma.booking.findUnique({
         where:{id:booking.id},
-        include:{facility:true, bookingSlots:{
-          include:{
-            timeSlot: true
-          }
+        include:{
+          facility: {include: {images: true}}, bookingSlots:{
+            include:{
+              timeSlot: true
+            }
           }}
       })
+
+      const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
+
+      return {...createdBooking, startTime, endTime}
 
     });
   }
@@ -153,6 +165,7 @@ export class BookingService {
           id: true,
           price:true,
           startTime: true,
+          dayOfWeek: true,
           endTime: true,
         },
         orderBy: [{dayOfWeek: 'asc',}, {startTime: 'asc',},],
@@ -179,7 +192,6 @@ export class BookingService {
         throw new Error('The total duration of selected time slots does not meet the minimum booking time required.');
       }
 
-
       await prisma.bookingSlot.deleteMany({
         where: { bookingId: id },
       });
@@ -193,16 +205,49 @@ export class BookingService {
         data: bookingSlotsData,
       });
 
-      return prisma.booking.update({
+      const updatedBooking = await prisma.booking.update({
         where:{id:booking.id},
         data:{price: totalPrice},
-        include:{facility:true, bookingSlots:{
+        include:{facility: {include: {images: true}}, bookingSlots:{
             include:{
               timeSlot: true,
             }
           }}
       })
 
+      const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
+
+      return {...updatedBooking, startTime, endTime}
+
     });
+  }
+
+  async getCorrectDateTime(currentDate, targetDayOfWeek, time) {
+    const currentDayOfWeek = currentDate.getDay();
+    let dayDiff = targetDayOfWeek - currentDayOfWeek;
+
+    if (dayDiff < 0) {
+      dayDiff += 7;
+    }
+
+    const correctDate = new Date(currentDate);
+    correctDate.setDate(correctDate.getDate() + dayDiff);
+    correctDate.setHours(time.getHours(), time.getMinutes(), time.getSeconds(), time.getMilliseconds());
+
+    return correctDate;
+  }
+
+  async getCorrectBookingTimes(currentDate = new Date(), timeSlots) {
+    if (timeSlots.length === 0) {
+      throw new Error("Time slots array is empty.");
+    }
+
+    const firstSlot = timeSlots[0];
+    const lastSlot = timeSlots[timeSlots.length - 1];
+
+    const startTime = await this.getCorrectDateTime(currentDate, firstSlot.dayOfWeek, firstSlot.startTime);
+    const endTime = await this.getCorrectDateTime(currentDate, lastSlot.dayOfWeek, lastSlot.endTime);
+
+    return { startTime, endTime };
   }
 }

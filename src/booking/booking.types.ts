@@ -36,6 +36,12 @@ export class Booking {
   @Field()
   updatedAt: Date;
 
+  @Field()
+  startTime: Date;
+
+  @Field()
+  endTime: Date;
+
 }
 
 @ObjectType()

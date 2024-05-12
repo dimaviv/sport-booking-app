@@ -10,10 +10,12 @@ input AddOwnerInfoInput {
 type Booking {
   bookingSlots: [BookingSlot!]!
   createdAt: DateTime!
+  endTime: DateTime!
   facility: Facility!
   facilityId: Int!
   id: Int!
   price: Float
+  startTime: DateTime!
   status: String
   updatedAt: DateTime!
   user: User!
