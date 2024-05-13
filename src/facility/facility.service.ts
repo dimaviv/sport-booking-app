@@ -244,6 +244,8 @@ export class FacilityService {
         ...(cityId && { district: { cityId } }),
         ...(minPrice !== undefined || maxPrice !== undefined) && { avgPrice: { gte: minPrice || 0, lte: maxPrice || 999999999 } },
         ...(searchIds && { id:{in:searchIds} }),
+
+        ...(ownerId === userId && {avgPrice: { not: null }})
       };
 
       let orderBy = [];
@@ -261,7 +263,6 @@ export class FacilityService {
         this.prisma.facility.findMany({
           where: {
             ...where,
-            avgPrice: { not: null } // Exclude facilities with `avgPrice` as null
           },
           include: {
             district: {
@@ -347,7 +348,7 @@ export class FacilityService {
 
   async findOne(id: number, userId: number = 0) {
     try {
-      const [facility, isFavorite] = await this.prisma.$transaction([
+      const [facility, isFavorite, uniqueDaysOfWeek] = await this.prisma.$transaction([
         this.prisma.facility.findUnique({
           where: { id },
           include: {
@@ -384,8 +385,21 @@ export class FacilityService {
             userId: userId,
             facilityId: id,
           },
-        })
+        }),
+        this.prisma.timeSlot.findMany({
+          where: { facilityId: id },
+          distinct: ['dayOfWeek'],
+          select:{
+            dayOfWeek: true,
+            }
+        }),
       ]);
+      const bookingDays = uniqueDaysOfWeek.map(slot => slot.dayOfWeek);
+      console.log(bookingDays)
+      const bookingDates = await this.getBookingDates(bookingDays, new Date('2024-05-14T18:34:44.331Z'));
+      console.log(new Date('2024-05-14T18:34:44.331Z'));
+      console.log(bookingDates)
+      // TODO: new Date() format???
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
       let userRate = null;
@@ -397,6 +411,7 @@ export class FacilityService {
         avgRating: aggregateRating[0]?._avg?.value || 0,
         currentUserRate: userRate,
         currentUserIsFavorite: !!isFavorite,
+        schedule:{timeSlots:facility.timeSlots, bookingDates}
       };
     } catch (e) {
       throw new InternalException(e.message);
@@ -420,6 +435,28 @@ export class FacilityService {
     const facility = await this.prisma.facility.findUnique({where:{id:facilityId}})
     if(!facility) throw Error('Facility not found')
     return facility.ownerId === userId
+  }
+
+  async getBookingDates(bookingDays, currentDate) {
+    const bookingDates = [];
+
+    bookingDays.forEach(dayOfWeek => {
+      const currentDay = currentDate.getDay();
+      console.log(currentDay)
+      let dayDiff = dayOfWeek - currentDay;
+
+      // Adjust for days in the past to push to the next week
+      if (dayDiff < 0) {
+        dayDiff += 7;
+      }
+
+      // Calculate the booking date
+      const bookingDate = new Date(currentDate);
+      bookingDate.setDate(currentDate.getDate() + dayDiff);
+      bookingDates.push(bookingDate);
+    });
+
+    return bookingDates;
   }
 
 }
