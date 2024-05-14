@@ -420,6 +420,8 @@ export class FacilityService {
 
       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
 
+      const groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithDates);
+
       const aggregateRating = await this.ratingService.aggregateRating(id);
       let userRate = null;
       if (userId) userRate = await this.ratingService.getUserRate(id, userId);
@@ -430,11 +432,35 @@ export class FacilityService {
         avgRating: aggregateRating[0]?._avg?.value || 0,
         currentUserRate: userRate,
         currentUserIsFavorite: !!isFavorite,
-        schedule:{timeSlots:timeSlotsWithDates, bookingDates}
+        schedule: groupedTimeSlots,
       };
     } catch (e) {
       throw new InternalException(e.message);
     }
+  }
+  async groupTimeSlotsByDateAndDayOfWeek(timeSlots) {
+    // Use a Map as the accumulator
+    const groups = timeSlots.reduce((acc, slot) => {
+      // Construct a key from the date and dayOfWeek
+      const key = `${slot.date}-${slot.dayOfWeek}`;
+
+      // Initialize the group if it doesn't already exist
+      if (!acc.has(key)) {
+        acc.set(key, {
+          date: slot.date,
+          dayOfWeek: slot.dayOfWeek,
+          timeSlots: []
+        });
+      }
+
+      // Push the current slot into the correct group
+      acc.get(key).timeSlots.push(slot);
+
+      return acc;
+    }, new Map());
+
+    // Convert the Map to an array of its values
+    return Array.from(groups.values());
   }
 
   async calcTimeSlotDate(timeSlots, uniqueDaysOfWeek) {
