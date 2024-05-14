@@ -250,13 +250,13 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
+      if (!filters) filters = {};
+
       const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search, minPrice, maxPrice } = filters;
       let { page, limit } = pagination;
 
       let searchIds;
-      if (search){
-         searchIds = await this.fullTextSearch(search)
-      }
+      if (search) searchIds = await this.fullTextSearch(search)
 
       const where = {
         ...(coveringType && { coveringType: { in: coveringType } }),
@@ -267,20 +267,14 @@ export class FacilityService {
         ...(cityId && { district: { cityId } }),
         ...(minPrice !== undefined || maxPrice !== undefined) && { avgPrice: { gte: minPrice || 0, lte: maxPrice || 999999999 } },
         ...(searchIds && { id:{in:searchIds} }),
-
         ...(ownerId === userId && {avgPrice: { not: null }})
       };
 
       let orderBy = [];
-      if (sortBy === 'price_asc') {
-        orderBy.push({ avgPrice: 'asc' });
-      }
-      if (sortBy === 'price_desc') {
-        orderBy.push({ avgPrice: 'desc' });
-      }
-      else {
-        orderBy.push({ ratings: { _count: 'desc' } });  // Default sort by ratings count
-      }
+
+      if (sortBy === 'price_asc') orderBy.push({ avgPrice: 'asc' });
+      if (sortBy === 'price_desc') orderBy.push({ avgPrice: 'desc' });
+      else orderBy.push({ ratings: { _count: 'desc' } });
 
       const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
@@ -326,7 +320,7 @@ export class FacilityService {
           }
         }),
       ]);
-
+      console.log(userId)
       const userFavorites = userId ? await this.prisma.favorite.findMany({
         where: {
           userId: userId,
@@ -438,6 +432,7 @@ export class FacilityService {
       throw new InternalException(e.message);
     }
   }
+
   async groupTimeSlotsByDateAndDayOfWeek(timeSlots) {
     // Use a Map as the accumulator
     const groups = timeSlots.reduce((acc, slot) => {
