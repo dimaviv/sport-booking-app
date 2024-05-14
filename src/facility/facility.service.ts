@@ -163,6 +163,17 @@ export class FacilityService {
           data: {
             ...createFacilityInput,
             ownerId: userId
+          },
+          include:{
+            district: {
+              include:{
+                city: {
+                  include:{
+                    districts: true
+                  }
+                },
+              }
+            },
           }
         });
 
@@ -200,7 +211,19 @@ export class FacilityService {
           where:{id},
           data: {
             ...updateFacilityInput
-          }});
+          },
+          include:{
+            district: {
+              include:{
+                city: {
+                  include:{
+                    districts: true
+                  }
+                },
+              }
+            },
+          }
+        });
 
         if (photoName) {
           await prisma.image.deleteMany({
@@ -394,12 +417,8 @@ export class FacilityService {
             }
         }),
       ]);
-      const bookingDays = uniqueDaysOfWeek.map(slot => slot.dayOfWeek);
-      console.log(bookingDays)
-      const bookingDates = await this.getBookingDates(bookingDays, new Date('2024-05-14T18:34:44.331Z'));
-      console.log(new Date('2024-05-14T18:34:44.331Z'));
-      console.log(bookingDates)
-      // TODO: new Date() format???
+
+      const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
       let userRate = null;
@@ -411,11 +430,38 @@ export class FacilityService {
         avgRating: aggregateRating[0]?._avg?.value || 0,
         currentUserRate: userRate,
         currentUserIsFavorite: !!isFavorite,
-        schedule:{timeSlots:facility.timeSlots, bookingDates}
+        schedule:{timeSlots:timeSlotsWithDates, bookingDates}
       };
     } catch (e) {
       throw new InternalException(e.message);
     }
+  }
+
+  async calcTimeSlotDate(timeSlots, uniqueDaysOfWeek) {
+    const bookingDays = uniqueDaysOfWeek.map(slot => slot.dayOfWeek);
+
+    const bookingDates = await this.getBookingDates(bookingDays, new Date());
+
+    const dateSlotsMap = new Map();
+
+
+    for (const date of bookingDates) {
+      const dayOfWeek = date.getDay();
+      if (bookingDays.includes(dayOfWeek)) {
+        dateSlotsMap.set(dayOfWeek, date);
+      }
+    }
+
+    const timeSlotsWithDates = [];
+    for (const slot of timeSlots) {
+      const bookingDate = dateSlotsMap.get(slot.dayOfWeek) || null; // If no date matches, return null
+      timeSlotsWithDates.push({
+        ...slot,
+        date: bookingDate
+      });
+    }
+
+    return {timeSlotsWithDates, bookingDates};
   }
 
   async remove(id: number, userId) {
@@ -442,7 +488,6 @@ export class FacilityService {
 
     bookingDays.forEach(dayOfWeek => {
       const currentDay = currentDate.getDay();
-      console.log(currentDay)
       let dayDiff = dayOfWeek - currentDay;
 
       // Adjust for days in the past to push to the next week
