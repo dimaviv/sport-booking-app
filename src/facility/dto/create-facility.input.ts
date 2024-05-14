@@ -1,6 +1,6 @@
 import {InputType, Field, registerEnumType} from '@nestjs/graphql';
 import {covering_type, facility_type, sport_type} from "@prisma/client";
-import {IsArray, IsEnum, IsInt, IsString} from "class-validator";
+import {IsArray, IsEnum, IsInt, IsOptional, IsString} from "class-validator";
 
 @InputType()
 export class CreateFacilityInput {
@@ -38,6 +38,7 @@ export class CreateFacilityInput {
   @Field({ nullable: true })
   readonly location?: string;
 
+  @IsOptional()
   @IsInt({ message: 'Minimum booking time must be an integer'})
   @Field({ nullable: true })
   readonly minBookingTime?: number;
