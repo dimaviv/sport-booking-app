@@ -13,6 +13,18 @@ export class Count {
 
 
 @ObjectType()
+export class DailySchedule {
+  @Field(() => Int)
+  dayOfWeek: number;
+
+  @Field(() => Date)
+  date: Date;
+
+  @Field(() => [TimeSlot])
+  timeSlots: TimeSlot[];
+}
+
+@ObjectType()
 export class Facility {
   @Field()
   id: number;
@@ -80,6 +92,9 @@ export class Facility {
   @Field(() => [TimeSlot])
   timeSlots: TimeSlot[];
 
+  @Field(() => [DailySchedule], { nullable: true })
+  schedule?: DailySchedule[];
+
   @Field(() => [Booking])
   bookings: Booking[];
 
@@ -96,6 +111,9 @@ export class TimeSlot {
 
   @Field(() => Int)
   dayOfWeek: number;
+
+  @Field({ nullable: true })
+  date?: Date;
 
   @Field()
   startTime: Date;
