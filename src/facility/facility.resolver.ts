@@ -13,6 +13,8 @@ import * as GraphQLUpload from 'graphql-upload/GraphQLUpload.js';
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
+import {RolesGuard} from "../auth/roles.guard";
+import {Roles} from "../auth/roles-auth.decorator";
 
 
 @Resolver(() => Facility)
@@ -85,6 +87,18 @@ export class FacilityResolver {
                 @Args('paginationArgs', {nullable: true}) paginationArgs: PaginationArgs,
                 @Context() context?: {req: Request}) {
     return await this.facilityService.findAll(facilitiesFilterInput, paginationArgs, context?.req?.user?.id);
+  }
+
+
+  //@UseGuards(GraphqlAuthGuard)
+  @UseGuards(RolesGuard)
+  @Roles('OWNER')
+  @Query(() => FacilitiesResponse)
+  async findOwnerFacilities(
+      @Args('paginationArgs', { nullable: true }) paginationArgs: PaginationArgs,
+      @Context() context?: { req: Request }
+  ) {
+    return await this.facilityService.findOwnerFacilities(paginationArgs, context.req.user.id);
   }
 
   @UseGuards(GraphqlAuthCheck)

@@ -10,24 +10,25 @@ import {JwtService} from "@nestjs/jwt";
 import {RatingService} from "../rating/rating.service";
 import {FilesModule} from "../files/files.module";
 import {RatingModule} from "../rating/rating.module";
+import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
+import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
+import {RolesGuard} from "../auth/roles.guard";
+import {AuthModule} from "../auth/auth.module";
 
 
 @Module({
   providers: [
     FacilityResolver, FacilityService, PrismaService,
     UserService, FilesService, RolesService, ConfigService,
-    JwtService,
-    // RatingService should not be directly provided here if it's part of RatingModule
+    JwtService, RolesGuard, GraphqlAuthGuard, GraphqlAuthCheck
   ],
   imports: [
-    FilesModule, // Assuming FilesService is exported by FilesModule
+    forwardRef(() => AuthModule),
+    FilesModule,
     forwardRef(() => RatingModule),
-    //RatingModule, // Ensures RatingService is available if needed
-    // Any other necessary module imports
   ],
   exports: [
     FacilityService,
-    // Any other services you want to make available outside this module
   ],
 })
 export class FacilityModule {}

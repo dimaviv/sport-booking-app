@@ -11,14 +11,17 @@ import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {AuthController} from "./auth.controller";
 import {RatingModule} from "../rating/rating.module";
+import {RolesGuard} from "./roles.guard";
+import {ConfigService} from "@nestjs/config";
 
 @Module({
   providers: [AuthResolver, AuthService, MailService, FilesService, UserService,
-    JwtService, PrismaService, RolesService, GoogleStrategy, FacebookStrategy],
+    JwtService, PrismaService, RolesService, GoogleStrategy, FacebookStrategy, RolesGuard],
   controllers: [AuthController],
   imports: [
     RatingModule,
   ],
+  exports: [AuthModule, JwtService, RolesGuard]
 
 })
 export class AuthModule {}

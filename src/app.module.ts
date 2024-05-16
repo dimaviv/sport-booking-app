@@ -74,7 +74,7 @@ interface CustomError extends Error {
     PaymentModule,
     ],
   controllers: [],
-  providers: [GoogleStrategy],
+  providers: [GoogleStrategy, ],
 })
 
 export class AppModule {}

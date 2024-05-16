@@ -9,9 +9,12 @@ import {RolesService} from "../roles/roles.service";
 import {FilesService} from "../files/files.service";
 import {JwtService} from "@nestjs/jwt";
 import {ConfigService} from "@nestjs/config";
+import {RolesGuard} from "../auth/roles.guard";
+import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
+import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
 
 @Module({
   providers: [BookingResolver, BookingService, FacilityService, UserService,
-    PrismaService, RatingService, RolesService, FilesService, JwtService, ConfigService]
+    PrismaService, RatingService, RolesService, FilesService, JwtService, ConfigService, RolesGuard, GraphqlAuthGuard, GraphqlAuthCheck]
 })
 export class BookingModule {}

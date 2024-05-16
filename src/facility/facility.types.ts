@@ -89,8 +89,8 @@ export class Facility {
   @Field(() => Boolean, { nullable: true })
   isWorking?: Boolean;
 
-  @Field(() => [TimeSlot])
-  timeSlots: TimeSlot[];
+  @Field(() => [TimeSlot], { nullable: true })
+  timeSlots?: TimeSlot[];
 
   @Field(() => [DailySchedule], { nullable: true })
   schedule?: DailySchedule[];
@@ -99,7 +99,6 @@ export class Facility {
   bookings: Booking[];
 
 }
-
 
 @ObjectType()
 export class TimeSlot {

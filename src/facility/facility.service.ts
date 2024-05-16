@@ -22,11 +22,11 @@ export class FacilityService {
       private readonly fileService: FilesService,
   ) {}
 
-
+  // TODO: validate owner of facility
   async updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput, userId: number) {
     try {
       let { timeSlotIds, ...slotsData } = updateTimeSlotsInput;
-
+      // Fetch the facility by timeSlot id
       return await this.prisma.$transaction(async (prisma) => {
         await prisma.timeSlot.updateMany({
           where: {
@@ -310,6 +310,81 @@ export class FacilityService {
           where: {
             ...where,
             avgPrice: { not: null }
+          },
+          _min: {
+            avgPrice: true,
+          },
+          _max: {
+            avgPrice: true,
+          }
+        }),
+      ]);
+
+      const userFavorites = userId ? await this.prisma.favorite.findMany({
+        where: {
+          userId: userId,
+          facilityId: { in: facilities.map(f => f.id) },
+        },
+      }) : [];
+
+      const favoritesMap = userFavorites.reduce((map, fav) => {
+        map[fav.facilityId] = true;
+        return map;
+      }, {});
+
+      const facilitiesWithFavorites = facilities.map(facility => ({
+        ...facility,
+        currentUserIsFavorite: !!favoritesMap[facility.id],
+      }));
+
+      const aggregateRating = await this.ratingService.aggregateRating();
+      const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
+
+      const priceRange = {min: priceRangeAggr._min.avgPrice, max: priceRangeAggr._max.avgPrice}
+      return { totalCount, priceRange, facilities: facilitiesWithRatingAndFavorites };
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
+  async findOwnerFacilities(pagination, userId) {
+    try {
+      let { page, limit } = pagination;
+
+      const where = {ownerId: userId}
+
+      const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
+        this.prisma.facility.findMany({
+          where: {
+            ...where,
+          },
+          include: {
+            district: {
+              include: {
+                city: true
+              }
+            },
+            images: {
+              where: { isMain: true }
+            },
+            _count: {
+              select: { ratings: true },
+            },
+          },
+          orderBy: [
+            { isWorking: 'desc' },
+          ],
+          skip: page * limit - limit,
+          take: limit,
+        }),
+        this.prisma.facility.count({
+          where: {
+            ...where,
+          }
+        }),
+        this.prisma.facility.aggregate({
+          where: {
+            ...where,
           },
           _min: {
             avgPrice: true,

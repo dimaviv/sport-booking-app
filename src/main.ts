@@ -28,10 +28,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(
       new ValidationPipe({
-          whitelist: true,
-          transform: true,
       })
   )
+
   app.useGlobalFilters(new GqlCustomExceptionFilter());
 
   await app.listen(process.env.PORT);
