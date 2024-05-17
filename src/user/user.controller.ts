@@ -29,7 +29,7 @@ export class UserController {
                     console.log(process.env.IOS_STORE_LINK)
 
                     const dp = deeplink({
-                        fallback: `${process.env.APP_URL}/mobile-app-download`,
+                        fallback: `${process.env.APP_URL}/link/email-confirmation`,
                         android_package_name: `${process.env.ANDROID_PACKAGE_NAME}`,
                         ios_store_link: `${process.env.IOS_STORE_LINK}`,
                         // delay: 1000,
