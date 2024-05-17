@@ -16,13 +16,15 @@ import { BookingModule } from './booking/booking.module';
 import {GraphQLError} from "graphql/index";
 import { LocationModule } from './location/location.module';
 import { PaymentModule } from './payment/payment.module';
+import {AppController} from "./app.controller";
+import {AppService} from "./app.service";
 
 
 interface CustomError extends Error {
   statusCode?: number;
   error?: string;
 }
-
+console.log(__dirname)
 @Module({
   imports: [AuthModule, UserModule, MailModule, FilesModule, RolesModule,
     ConfigModule.forRoot({
@@ -63,18 +65,20 @@ interface CustomError extends Error {
       }
 
     }),
+
     ServeStaticModule.forRoot({
       rootPath: path.resolve(__dirname, 'static'),
     }),
-    //forwardRef(() => FacilityModule),
+
     FacilityModule,
     RatingModule,
     BookingModule,
     LocationModule,
     PaymentModule,
+    AppModule,
     ],
-  controllers: [],
-  providers: [GoogleStrategy, ],
+  controllers: [AppController],
+  providers: [AppService, GoogleStrategy, ],
 })
 
 export class AppModule {}

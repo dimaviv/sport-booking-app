@@ -1,6 +1,7 @@
 import {Controller, Get, Query, Res, HttpStatus, Req, Next} from '@nestjs/common';
 import { Response, Request } from 'express';
 import { UserService } from './user.service';
+import * as path from "path";
 const deeplink = require('node-deeplink');
 
 @Controller('user')
@@ -48,6 +49,8 @@ export class UserController {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error.', error });
         }
     }
+
+
 
     private isMobileDevice(userAgent: string): boolean {
         const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
