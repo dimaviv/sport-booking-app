@@ -8,6 +8,9 @@ export class City {
   @Field()
   name: string;
 
+  @Field({nullable:true})
+  location?: string;
+
   @Field(() => [District], { nullable: 'itemsAndList' }) // 'itemsAndList' makes both the array and its items nullable
   districts?: District[];
 }
@@ -19,6 +22,9 @@ export class District {
 
   @Field()
   name: string;
+
+  @Field({nullable:true})
+  location?: string;
 
   @Field(() => City)
   city: City;

@@ -146,9 +146,10 @@ model Facility {
 }
 
 model City {
-  id        Int        @id @default(autoincrement())
-  name      String
-  districts District[] // Relation to Districts
+  id          Int        @id @default(autoincrement())
+  name        String
+  location    String?
+  districts   District[] // Relation to Districts
 
   @@index([name], name: "idx_city_name")
 }
@@ -158,6 +159,7 @@ model District {
   name        String
   cityId      Int
   city        City       @relation(fields: [cityId], references: [id])
+  location    String?
   facilities  Facility[]
 
   @@index([name], name: "idx_district_name")

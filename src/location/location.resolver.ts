@@ -5,6 +5,8 @@ import {City, District} from "./location.types";
 
 @Resolver()
 export class LocationResolver {
+
+
   constructor(private readonly locationService: LocationService) {}
 
 

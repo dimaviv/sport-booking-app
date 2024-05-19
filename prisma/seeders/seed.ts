@@ -716,7 +716,7 @@ const users = [
 ]
 
 const cities = [
-    { id: 1, name: 'Одеса' },
+    { id: 1, name: 'Одеса', location:'46.470151, 30.730946'},
     { id: 2, name: 'Київ' },
     { id: 3, name: 'Дніпро' },
     { id: 4, name: 'Львів' },
@@ -724,10 +724,10 @@ const cities = [
 ];
 
 const districts = [
-    { id: 1, name: 'Приморський', cityId:1 },
-    { id: 2, name: 'Малиновський', cityId:1 },
-    { id: 3, name: 'Суворовський', cityId:1 },
-    { id: 4, name: 'Київський', cityId:1 },
+    { id: 1, name: 'Приморський', cityId:1, location:'46.466667, 30.750000' },
+    { id: 2, name: 'Хаджибейський', cityId:1, location:'46.457806, 30.683306' },
+    { id: 3, name: 'Пересипський', cityId:1, location:'46.525917, 30.728861' },
+    { id: 4, name: 'Київський', cityId:1, location:'46.466670, 30.733330' },
     { id: 5, name: 'Голосіївський', cityId:2 },
     { id: 7, name: 'Оболонський', cityId:2 },
     { id: 8, name: 'Печерський', cityId:2 },
