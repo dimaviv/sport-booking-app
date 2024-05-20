@@ -1,4 +1,4 @@
-import {BadRequestException, forwardRef, Inject, Injectable} from '@nestjs/common';
+import {BadRequestException, forwardRef, Inject, Injectable, NotFoundException} from '@nestjs/common';
 import {CreateFacilityInput} from './dto/create-facility.input';
 import {UpdateFacilityInput} from './dto/update-facility.input';
 import {PrismaService} from "../prisma.service";
@@ -20,12 +20,38 @@ export class FacilityService {
       private readonly fileService: FilesService,
   ) {}
 
-  // TODO: validate owner of facility
+
   async updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput, userId: number) {
     try {
       let { timeSlotIds, ...slotsData } = updateTimeSlotsInput;
-      // Fetch the facility by timeSlot id
+
       return await this.prisma.$transaction(async (prisma) => {
+
+        const slots = await prisma.timeSlot.findMany({
+          where: {
+            id: { in: timeSlotIds },
+          },
+          select: {
+            id: true,
+            facilityId: true
+          }
+        });
+
+        if (slots.length === 0) {
+          throw new NotFoundException('No time slots found with the provided IDs.');
+        }
+
+        const uniqueFacilityIds = new Set(slots.map(slot => slot.facilityId));
+        if (uniqueFacilityIds.size > 1) {
+          throw new BadRequestException('Time slots must belong to the same facility.');
+        }
+
+        const facilityId = slots[0].facilityId;
+
+        if (!await this.isOwner(facilityId, userId)) {
+          throw new BadRequestException("User isn't the owner of the facility.");
+        }
+
         await prisma.timeSlot.updateMany({
           where: {
             id: {

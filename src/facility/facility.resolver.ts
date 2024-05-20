@@ -50,7 +50,7 @@ export class FacilityResolver {
   async updateTimeSlots(@Args('updateTimeSlotsInput', {nullable: true}) updateTimeSlotsInput: UpdateTimeSlotsInput,
                         @Context() context: {req: Request}){
 
-    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User doesn't own any facility")
+    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User is not authorized as an owner")
 
     return this.facilityService.updateTimeSlots(updateTimeSlotsInput, context.req.user.id);
   }
