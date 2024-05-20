@@ -38,6 +38,7 @@ type BookingsResponse {
 type City {
   districts: [District]
   id: Float!
+  location: String
   name: String!
 }
 
@@ -101,6 +102,7 @@ scalar DateTime
 type District {
   city: City!
   id: Float!
+  location: String
   name: String!
 }
 
