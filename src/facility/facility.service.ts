@@ -11,8 +11,6 @@ import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
 
 
-
-
 @Injectable()
 export class FacilityService {
   constructor(
@@ -56,6 +54,51 @@ export class FacilityService {
     }
   }
 
+  async deleteSchedule(facilityId: number, userId: number): Promise<boolean> {
+    if (!await this.isOwner(facilityId, userId)){
+      throw new BadRequestException("User is not the owner of the facility");
+    }
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const timeSlotsWithBookings = await prisma.timeSlot.findMany({
+          where: {
+            facilityId: facilityId,
+            isActive: true,
+            bookingSlots: {
+              some: {}
+            }
+          }
+        });
+        if (timeSlotsWithBookings.length > 0) {
+          await prisma.timeSlot.updateMany({
+            where: {
+              id: {
+                in: timeSlotsWithBookings.map(slot => slot.id)
+              }
+            },
+            data: {
+              isActive: false
+            }
+          });
+        }
+
+        const deleteResult = await prisma.timeSlot.deleteMany({
+          where: {
+            facilityId: facilityId,
+            isActive: true,
+            bookingSlots: {
+              none: {}
+            }
+          }
+        });
+
+        return deleteResult.count > 0 || timeSlotsWithBookings.length > 0;
+      });
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
   async createSchedule(createScheduleInput: CreateScheduleInput, userId: number) {
     const { facilityId, daysOfWeek, price, startTime, endTime } = createScheduleInput;
 
@@ -86,6 +129,7 @@ export class FacilityService {
             isActive: false
           }
         });
+
         await prisma.timeSlot.createMany({
           data: slots.map(slot => ({
             facilityId,

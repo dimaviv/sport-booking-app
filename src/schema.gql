@@ -181,6 +181,7 @@ type Mutation {
   createPayment(createPaymentInput: CreatePaymentInput!): Payment!
   createRating(createRatingInput: CreateRatingInput!): Rating!
   createSchedule(createScheduleInput: CreateScheduleInput!): [TimeSlot!]!
+  deleteSchedule(facilityId: Float!): Boolean!
   googleAuth(token: String!): LoginResponse!
   login(loginInput: LoginDto!): LoginResponse!
   logout: String!

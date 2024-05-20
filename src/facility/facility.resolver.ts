@@ -27,9 +27,21 @@ export class FacilityResolver {
   async createSchedule(@Args('createScheduleInput') createScheduleInput: CreateScheduleInput,
                        @Context() context: {req: Request}) {
 
-    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User can not be the owner")
+    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException('User is not authorized as an owner')
 
     return this.facilityService.createSchedule(createScheduleInput, context.req.user.id);
+  }
+
+  @UseGuards(GraphqlAuthGuard)
+  @Mutation(() => Boolean)
+  async deleteSchedule(@Args('facilityId') facilityId: number,
+                       @Context() context: {req: Request}) {
+
+    if (!context.req.user.roles.includes('OWNER')) {
+      throw new UnauthorizedException('User is not authorized as an owner');
+    }
+
+    return this.facilityService.deleteSchedule(facilityId, context.req.user.id);
   }
 
 

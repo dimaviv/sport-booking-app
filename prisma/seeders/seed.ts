@@ -712,6 +712,11 @@ const users = [
         password:'$2b$10$idiPBeBGGVCNd5VBt1JqxOmNQA/U7XO.GGCPMzKVu/zllvxFX7uMu',
         activationLink:'164ffe0c-d029-42c1-b964-5bf9d27c305f',
         createdAt: new Date(),
+        updatedAt: new Date(),},
+    {id:2, email:'test1@example.com',
+        password:'$2b$10$idiPBeBGGVCNd5VBt1JqxOmNQA/U7XO.GGCPMzKVu/zllvxFX7uMu',
+        activationLink:'164ffe0c-d029-42c1-b964-5bf9d27caaaa',
+        createdAt: new Date(),
         updatedAt: new Date(),}
 ]
 

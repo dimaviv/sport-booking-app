@@ -254,7 +254,6 @@ export class UserService {
 
     async verifyEmailToken(token: string): Promise<boolean> {
         try {
-
             const user = await this.prisma.user.findUnique({
                 where: { activationLink: token },
             });
