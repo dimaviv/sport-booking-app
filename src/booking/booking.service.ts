@@ -51,7 +51,6 @@ export class BookingService {
     return { totalCount, bookings: updatedBookings };
   }
 
-
   async create(createBookingInput: CreateBookingInput, userId: number) {
     const { facilityId, timeSlotIds } = createBookingInput;
 

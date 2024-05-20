@@ -81,7 +81,14 @@ export class FacilityService {
             }
           });
         }
-
+        await prisma.facility.update({
+          where: {
+            id: facilityId
+          },
+          data: {
+            avgPrice: null
+          }
+        });
         const deleteResult = await prisma.timeSlot.deleteMany({
           where: {
             facilityId: facilityId,

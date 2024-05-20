@@ -32,6 +32,7 @@ BEGIN
         FROM "TimeSlot"
         WHERE "facilityId" = COALESCE(NEW."facilityId", OLD."facilityId")
         AND status IN ('available', 'booked')
+        AND "isActive" = true
     )
     WHERE id = COALESCE(NEW."facilityId", OLD."facilityId");
 
