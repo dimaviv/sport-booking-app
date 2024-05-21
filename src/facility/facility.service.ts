@@ -344,6 +344,8 @@ export class FacilityService {
         ...(cityId && { district: { cityId } }),
         ...(minPrice !== undefined || maxPrice !== undefined) && { avgPrice: { gte: minPrice || 0, lte: maxPrice || 999999999 } },
         ...(searchIds && { id:{in:searchIds} }),
+        ...(({avgPrice: {not: null}})),
+
       };
 
       let orderBy = [];
