@@ -239,10 +239,10 @@ export class UserService {
 
     async getProfile(userId:number) {
         try {
-            const user = await this.prisma.user.findUnique({where:{id:userId}, include: {UserOwner: true, roles: true},})
+            const user = await this.prisma.user.findUnique({where:{id:userId}, include: {userOwner: true, roles: true},})
             if (!user) throw new BadRequestException('User not found');
 
-            return {...user, userOwner: user.UserOwner}
+            return {...user}
         } catch (err) {
             throw new InternalException(err.message);
         }

@@ -103,9 +103,9 @@ model User {
   favorites  Favorite[]
 
   bookings  Booking[]
-  UserOwner UserOwner?
-  Rating    Rating[]
-  Facility  Facility[]
+  userOwner UserOwner?
+  rating    Rating[]
+  facility  Facility[]
 
 }
 

@@ -22,7 +22,7 @@ export class BookingService {
           userId: userId,
         },
         include: {
-          facility: {include: {images: true, district: true, owner: {include: {UserOwner: true}},}},
+          facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
           bookingSlots: {
             include: {
               timeSlot: true,
@@ -135,7 +135,7 @@ export class BookingService {
           price: totalPrice,
         },
         include: {
-          facility: {include: {images: true, district: true, owner: {include: {UserOwner: true}},}},
+          facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
           bookingSlots:{
             include:{
               timeSlot: true
@@ -158,7 +158,7 @@ export class BookingService {
     return await this.prisma.$transaction(async (prisma) => {
       const booking = await prisma.booking.findUnique({
         where: { id },
-        include: { facility: {include: {images: true, district: true, owner: {include: {UserOwner: true}},}}, },
+        include: { facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}}, },
       });
 
       if (!booking || booking.userId !== userId || booking.status !== 'pending') {

@@ -9,7 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-import {UserOwner} from "../user/user.type";
+
 
 
 @Injectable()
@@ -243,7 +243,7 @@ export class FacilityService {
             ownerId: userId
           },
           include:{
-            owner: {include: {UserOwner: true}},
+            owner: {include: {userOwner: true}},
             district: {
               include:{
                 city: {
@@ -292,7 +292,7 @@ export class FacilityService {
             ...updateFacilityInput
           },
           include:{
-            owner: {include: {UserOwner: true}},
+            owner: {include: {userOwner: true}},
             district: {
               include:{
                 city: {
@@ -368,7 +368,7 @@ export class FacilityService {
             ...where,
           },
           include: {
-            owner: {include: {UserOwner: true}},
+            owner: {include: {userOwner: true}},
             district: {
               include: {
                 city: true
@@ -422,8 +422,9 @@ export class FacilityService {
       }));
 
       const aggregateRating = await this.ratingService.aggregateRating();
-      const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
 
+      const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
+      console.log(facilitiesWithRatingAndFavorites)
       const priceRange = {min: priceRangeAggr._min.avgPrice, max: priceRangeAggr._max.avgPrice}
       return { totalCount, priceRange, facilities: facilitiesWithRatingAndFavorites };
     } catch (e) {
@@ -443,7 +444,7 @@ export class FacilityService {
             ...where,
           },
           include: {
-            owner: {include: {UserOwner: true}},
+            owner: {include: {userOwner: true}},
             district: {
               include: {
                 city: true
@@ -528,7 +529,7 @@ export class FacilityService {
         this.prisma.facility.findUnique({
           where: { id },
           include: {
-            owner: {include: {UserOwner: true}},
+            owner: {include: {userOwner: true}},
             images: true,
             district: {
               include:{
