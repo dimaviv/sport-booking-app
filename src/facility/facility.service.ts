@@ -9,6 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
+import {UserOwner} from "../user/user.type";
 
 
 @Injectable()
@@ -242,6 +243,7 @@ export class FacilityService {
             ownerId: userId
           },
           include:{
+            owner: {include: {UserOwner: true}},
             district: {
               include:{
                 city: {
@@ -290,6 +292,7 @@ export class FacilityService {
             ...updateFacilityInput
           },
           include:{
+            owner: {include: {UserOwner: true}},
             district: {
               include:{
                 city: {
@@ -365,6 +368,7 @@ export class FacilityService {
             ...where,
           },
           include: {
+            owner: {include: {UserOwner: true}},
             district: {
               include: {
                 city: true
@@ -439,6 +443,7 @@ export class FacilityService {
             ...where,
           },
           include: {
+            owner: {include: {UserOwner: true}},
             district: {
               include: {
                 city: true
@@ -523,6 +528,7 @@ export class FacilityService {
         this.prisma.facility.findUnique({
           where: { id },
           include: {
+            owner: {include: {UserOwner: true}},
             images: true,
             district: {
               include:{
