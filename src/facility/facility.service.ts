@@ -327,9 +327,8 @@ export class FacilityService {
 
   async findAll(filters, pagination, userId) {
     try {
-      console.log(filters)
       if (!filters) filters = {};
-      console.log(filters)
+
       const { sortBy, sportType, coveringType, facilityType, districts, ownerId, cityId, search, minPrice, maxPrice } = filters;
       let { page, limit } = pagination;
 
