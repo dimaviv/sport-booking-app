@@ -121,7 +121,7 @@ input FacilitiesFilterInput {
 
 type FacilitiesResponse {
   facilities: [Facility!]!
-  priceRange: PriceRange!
+  priceRange: PriceRange
   totalCount: Float!
 }
 
@@ -216,8 +216,8 @@ type Payment {
 }
 
 type PriceRange {
-  max: Float!
-  min: Float!
+  max: Float
+  min: Float
 }
 
 type Query {

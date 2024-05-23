@@ -1,10 +1,10 @@
-import {BadRequestException, Injectable, UnauthorizedException, HttpException, HttpStatus} from '@nestjs/common';
+import {BadRequestException, HttpException, HttpStatus, Injectable, UnauthorizedException} from '@nestjs/common';
 import {PrismaService} from "../prisma.service";
 import {ConfigService} from "@nestjs/config";
 import {JwtService} from "@nestjs/jwt";
 import {MailService} from "../mail/mail.service";
 import * as bcrypt from "bcrypt";
-import { v4 as uuidv4 } from 'uuid';
+import {v4 as uuidv4} from 'uuid';
 import {Request, Response} from 'express'
 import {LoginDto, RegisterDto} from "./dto";
 import {User} from "../user/user.type";
@@ -12,7 +12,6 @@ import {FacebookStrategy} from "./strategies/facebook.stategy";
 import {GoogleStrategy} from "./strategies/google.stategy";
 import {RolesService} from "../roles/roles.service";
 import {UserService} from "../user/user.service";
-
 
 
 @Injectable()
@@ -164,13 +163,15 @@ export class AuthService {
         }
         const userExists = await this.prisma.user.findUnique({
             where: {id: payload.id},
+            include: {roles: true}
         })
         if (!userExists){
             throw new BadRequestException('User no longer exists')
         }
-
         const expiredIn = 15000;
         const expiration = Math.floor(Date.now() / 1000) + expiredIn;
+        payload.roles = userExists.roles.map(role => role.value)
+
         const accessToken = this.jwtService.sign(
             {...payload, exp:expiration},
             {

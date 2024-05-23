@@ -421,10 +421,10 @@ export class FacilityService {
         currentUserIsFavorite: !!favoritesMap[facility.id],
       }));
 
-      const aggregateRating = await this.ratingService.aggregateRating();
+      const aggregateRating = await this.ratingService.aggregateRating(null, userId);
 
       const facilitiesWithRatingAndFavorites = await mergeFacilitiesWithRating(facilitiesWithFavorites, aggregateRating);
-      console.log(facilitiesWithRatingAndFavorites)
+
       const priceRange = {min: priceRangeAggr._min.avgPrice, max: priceRangeAggr._max.avgPrice}
       return { totalCount, priceRange, facilities: facilitiesWithRatingAndFavorites };
     } catch (e) {
@@ -572,19 +572,21 @@ export class FacilityService {
             }
         }),
       ]);
+      if (!facility) return new BadRequestException('Facility with such id was not found')
 
       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
 
       const groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithDates);
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
+
       let userRate = null;
       if (userId) userRate = await this.ratingService.getUserRate(id, userId);
 
       return {
         ...facility,
-        ratingCount: aggregateRating[0]?._count?.id || 0,
-        avgRating: aggregateRating[0]?._avg?.value || 0,
+        ratingCount: aggregateRating[0]?.ratingCount || 0,
+        avgRating: aggregateRating[0]?.avgRating || 0,
         currentUserRate: userRate,
         currentUserIsFavorite: !!isFavorite,
         schedule: groupedTimeSlots,

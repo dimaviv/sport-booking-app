@@ -6,8 +6,9 @@ export async function mergeFacilitiesWithRating(facilities, aggregateRating) {
 
             return {
                 ...facility,
-                ratingCount: matchedAggregate?._count?.id || 0,
-                avgRating: matchedAggregate?._avg?.value || 0,
+                ratingCount: matchedAggregate?.ratingCount || 0,
+                avgRating: matchedAggregate?.avgRating || 0,
+                currentUserRate: matchedAggregate?.currentUserRate || null,
             };
         })
     );

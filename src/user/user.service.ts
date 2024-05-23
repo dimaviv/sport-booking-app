@@ -19,7 +19,6 @@ export class UserService {
                 private readonly fileService: FilesService,
     ) {}
 
-
     async getUserFavorites(userId: number, pagination) {
         try {
             let { page, limit } = pagination;
@@ -64,7 +63,7 @@ export class UserService {
                 ...favorite.facility,
                     currentUserIsFavorite: true,
             }));
-            const aggregateRating = await this.ratingService.aggregateRating();
+            const aggregateRating = await this.ratingService.aggregateRating(null, userId);
 
             const facilitiesWithRating = await mergeFacilitiesWithRating(facilities, aggregateRating);
 

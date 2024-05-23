@@ -154,10 +154,10 @@ export class Image {
 
 @ObjectType()
 export class PriceRange {
-  @Field(() => Number)
+  @Field(() => Number, { nullable: true })
   min: number;
 
-  @Field(() => Number)
+  @Field(() => Number, { nullable: true })
   max: number;
 }
 
@@ -169,7 +169,7 @@ export class FacilitiesResponse {
   @Field()
   totalCount: number;
 
-  @Field()
+  @Field({ nullable: true })
   priceRange: PriceRange;
 }
 

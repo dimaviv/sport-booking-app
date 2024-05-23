@@ -16,7 +16,13 @@ export class RatingService {
   async create(createRatingInput: CreateRatingInput, userId) {
     try {
       if (await this.facilityService.isOwner(createRatingInput.facilityId, userId)){
-        return new BadRequestException("User is the the owner")
+        return new BadRequestException("User is the owner")
+      }
+      const existRate = await this.prisma.rating.findUnique({
+        where: { userId_facilityId: { userId, facilityId: createRatingInput.facilityId } }
+      });
+      if (existRate){
+        return new BadRequestException("The rate is already exists")
       }
       return await this.prisma.rating.create({data:{...createRatingInput, userId }})
     }catch (e) {
@@ -26,10 +32,16 @@ export class RatingService {
 
   async update(updateRatingInput: UpdateRatingInput, userId) {
     try {
-      return await this.prisma.rating.update({
+      const updatedRate = await this.prisma.rating.update({
         where:{id:updateRatingInput.id, userId},
         data:{value: updateRatingInput.value }
       })
+
+      if (await this.facilityService.isOwner(updatedRate.facilityId, userId)){
+        return new BadRequestException("User is the owner")
+      }
+
+      return updatedRate
     }catch (e) {
       throw new InternalException(e.message);
     }
@@ -55,21 +67,48 @@ export class RatingService {
     }
   }
 
-  async aggregateRating(facilityId = null){
-    const where = {...(facilityId && {facilityId})}
+  async aggregateRating(facilityId: number | null = null, userId: number | null = null) {
+    const where: any = {};
+    if (facilityId) {
+      where.facilityId = facilityId;
+    }
+
     try {
-      return await this.prisma.rating.groupBy({
+      const overallResults = await this.prisma.rating.groupBy({
         by: ['facilityId'],
         where,
         _count: {
           id: true,
         },
         _avg: {
-          value:true
-        },
-      })
-    }catch (e) {
+          value: true,
+        }
+      });
+
+      let userRatingsMap = new Map();
+      if (userId) {
+        const userRatings = await this.prisma.rating.findMany({
+          where: {
+            ...where,
+            userId
+          },
+        });
+
+        for (const rating of userRatings) {
+          userRatingsMap.set(rating.facilityId, rating);
+        }
+      }
+
+      return overallResults.map(result => ({
+        facilityId: result.facilityId,
+        ratingCount: result._count.id,
+        avgRating: result._avg.value,
+        currentUserRate: userRatingsMap.get(result.facilityId) || null
+      }));
+    } catch (e) {
       throw new InternalException(e.message);
     }
   }
+
+
 }
