@@ -134,7 +134,7 @@ export class FacilityService {
   }
 
   async createSchedule(createScheduleInput: CreateScheduleInput, userId: number) {
-    const { facilityId, daysOfWeek, price, startTime, endTime } = createScheduleInput;
+    const { facilityId, daysOfWeek, price, startTime, endTime, minBookingTime } = createScheduleInput;
 
     if (!await this.isOwner(facilityId, userId)){
       throw new BadRequestException("User isn't the owner");
@@ -144,6 +144,9 @@ export class FacilityService {
       const slots = this.generateTimeSlots(startTime, endTime, daysOfWeek);
 
       return await this.prisma.$transaction(async (prisma) => {
+        if (minBookingTime){
+          await prisma.facility.update({where: {id: facilityId}, data:{minBookingTime}})
+        }
         await prisma.timeSlot.deleteMany({
           where: {
             facilityId: facilityId,
@@ -163,7 +166,6 @@ export class FacilityService {
             isActive: false
           }
         });
-
         await prisma.timeSlot.createMany({
           data: slots.map(slot => ({
             facilityId,
