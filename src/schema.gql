@@ -132,6 +132,7 @@ type Facility {
   bookings: [Booking!]!
   city: City!
   coveringType: String
+  currentUserIsFavorite: Boolean
   currentUserIsRated: Boolean
   currentUserRate: Rating
   description: String
@@ -239,7 +240,7 @@ type Rating {
   id: Float!
   user: User!
   userId: Float!
-  value: String!
+  value: Float!
 }
 
 input RegisterDto {

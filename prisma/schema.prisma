@@ -185,8 +185,8 @@ model Image {
 }
 
 model Rating {
-  id    Int @id @default(autoincrement())
-  value Int
+  id         Int @id @default(autoincrement())
+  value      Int
 
   userId     Int
   facilityId Int

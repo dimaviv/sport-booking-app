@@ -8,7 +8,7 @@ export class Rating {
   id?: number;
 
   @Field()
-  value: string;
+  value: number;
 
   @Field()
   userId: number;
