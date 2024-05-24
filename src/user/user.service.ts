@@ -216,13 +216,12 @@ export class UserService {
     async updateProfile(userId:number, dto: UpdateUserDto, avatarFile: any) {
         try {
             let updateData
-            if (dto){
-                 updateData = {...dto, avatar:undefined};
-            }
+            if (dto) updateData = {...dto, avatar:undefined};
 
             if (avatarFile) {
                 updateData.avatar = await this.fileService.saveAvatar(avatarFile)
             }
+            if (avatarFile === null) updateData.avatar = null
 
             return await this.prisma.user.update({
                 where: {id: userId},
