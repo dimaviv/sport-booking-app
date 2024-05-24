@@ -84,7 +84,10 @@ export class Facility {
   currentUserRate?: Rating;
 
   @Field(() => Boolean, { nullable: true })
-  currentUserIsFavorite?: Boolean;
+  currentUserIsRated?: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
+  userHasRated?: Boolean;
 
   @Field(() => Boolean, { nullable: true })
   isWorking?: Boolean;

@@ -132,7 +132,7 @@ type Facility {
   bookings: [Booking!]!
   city: City!
   coveringType: String
-  currentUserIsFavorite: Boolean
+  currentUserIsRated: Boolean
   currentUserRate: Rating
   description: String
   district: District!
@@ -150,6 +150,7 @@ type Facility {
   schedule: [DailySchedule!]
   sportType: [String!]
   timeSlots: [TimeSlot!]
+  userHasRated: Boolean
 }
 
 type Image {

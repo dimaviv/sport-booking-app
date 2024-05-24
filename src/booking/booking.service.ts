@@ -22,14 +22,24 @@ export class BookingService {
           userId: userId,
         },
         include: {
-          facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
+          facility: {
+            include: {
+              images: true,
+              district: true,
+              owner: { include: { userOwner: true } },
+              ratings: {
+                where: { userId: userId }, // Fetch the rating for the current user
+                select: { id: true } // Minimize data transfer if you just need to check existence
+              }
+            },
+          },
           bookingSlots: {
             include: {
               timeSlot: true,
             },
           },
         },
-        orderBy: {id: 'desc',},
+        orderBy: { id: 'desc' },
         skip: offset,
         take: limit,
       }),
@@ -40,16 +50,22 @@ export class BookingService {
       }),
     ]);
 
-    const currentDate = new Date()
+    const currentDate = new Date();
 
-    const updatedBookings = bookings.map(async booking => {
+    // Map through bookings and attach additional computed fields
+    const updatedBookings = await Promise.all(bookings.map(async booking => {
       const timeSlots = booking.bookingSlots.map(slot => slot.timeSlot);
       const { startTime, endTime } = await this.getCorrectBookingTimes(currentDate, timeSlots);
-      return { ...booking, startTime, endTime };
-    });
+
+      // Check if there's a rating by the user for the facility
+      const userHasRated = booking.facility.ratings.length > 0;
+
+      return { ...booking, startTime, endTime, facility: { ...booking.facility, userHasRated } };
+    }));
 
     return { totalCount, bookings: updatedBookings };
   }
+
 
   async fetchFacility(prisma, facilityId) {
     const facility = await prisma.facility.findUnique({
@@ -111,7 +127,6 @@ export class BookingService {
       data: bookingSlotsData,
     });
   }
-
 
   async deleteBookingSlots(prisma, bookingId) {
     await prisma.bookingSlot.deleteMany({
