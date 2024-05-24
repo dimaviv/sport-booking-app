@@ -359,8 +359,8 @@ export class FacilityService {
       let orderBy = [];
 
       if (sortBy === 'price_asc') orderBy.push({ avgPrice: 'asc' });
-      if (sortBy === 'price_desc') orderBy.push({ avgPrice: 'desc' });
-      else orderBy.push({ ratings: { _count: 'desc' } });
+      else if(sortBy === 'price_desc') orderBy.push({ avgPrice: 'desc' });
+      else  orderBy.push({ ratings: { _count: 'desc' } });
 
       const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
