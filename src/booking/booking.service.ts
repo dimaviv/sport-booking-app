@@ -1,6 +1,5 @@
 import {Injectable} from '@nestjs/common';
 import {CreateBookingInput} from './dto/create-booking.input';
-import {UpdateBookingInput} from './dto/update-booking.input';
 import {PrismaService} from "../prisma.service";
 
 
@@ -13,9 +12,9 @@ export class BookingService {
 
 
   async findAllByUserId(userId: number, pagination) {
+
     let { page, limit } = pagination;
     const offset = (page - 1) * limit;
-
     const [bookings, totalCount] = await this.prisma.$transaction([
       this.prisma.booking.findMany({
         where: {
@@ -28,8 +27,8 @@ export class BookingService {
               district: true,
               owner: { include: { userOwner: true } },
               ratings: {
-                where: { userId: userId }, // Fetch the rating for the current user
-                select: { id: true } // Minimize data transfer if you just need to check existence
+                where: { userId: userId },
+                select: { id: true }
               }
             },
           },
@@ -66,9 +65,8 @@ export class BookingService {
     return { totalCount, bookings: updatedBookings };
   }
 
-
-  async fetchFacility(prisma, facilityId) {
-    const facility = await prisma.facility.findUnique({
+  async fetchFacility(facilityId) {
+    const facility = await this.prisma.facility.findUnique({
       where: { id: facilityId },
       select: { minBookingTime: true },
     });
@@ -78,21 +76,13 @@ export class BookingService {
     return facility;
   }
 
-  async fetchTimeSlots(prisma, timeSlotIds) {
-    return await prisma.timeSlot.findMany({
+  async fetchTimeSlots(timeSlotIds) {
+     return await this.prisma.timeSlot.findMany({
       where: {
         id: { in: timeSlotIds },
-        status: 'available',
         isActive: true,
       },
-      select: {
-        id: true,
-        price: true,
-        startTime: true,
-        dayOfWeek: true,
-        endTime: true,
-      },
-      orderBy: [{ dayOfWeek: 'asc' }, { startTime: 'asc' }],
+      orderBy: [{ startTime: 'asc' }],
     });
   }
 
@@ -118,12 +108,26 @@ export class BookingService {
     return { totalPrice, totalDurationInMinutes };
   }
 
-  async manageBookingSlots(prisma, bookingId, timeSlots) {
-    const bookingSlotsData = timeSlots.map(slot => ({
-      bookingId,
-      timeSlotId: slot.id,
-    }));
-    await prisma.bookingSlot.createMany({
+
+
+  async manageBookingSlots(prisma, bookingId, timeSlots, startDate: Date) {
+    console.log('startdate: ', startDate)
+    let currentStartDate = new Date(startDate);
+    const bookingSlotsData = timeSlots.map(slot => {
+      const bookingSlot = {
+        bookingId,
+        timeSlotId: slot.id,
+        date: new Date(currentStartDate),
+      };
+
+      currentStartDate = new Date(currentStartDate.getTime() + 30 * 60000); // 30 minutes = 30 * 60 * 1000 milliseconds
+
+      return bookingSlot;
+    });
+
+    console.log(bookingSlotsData)
+
+    return await prisma.bookingSlot.createMany({
       data: bookingSlotsData,
     });
   }
@@ -134,77 +138,60 @@ export class BookingService {
     });
   }
 
-  async create(createBookingInput: CreateBookingInput, userId: number) {
-    const { facilityId, timeSlotIds } = createBookingInput;
-
-    return await this.prisma.$transaction(async (prisma) => {
-      const facility = await this.fetchFacility(prisma, facilityId);
-      const timeSlots = await this.fetchTimeSlots(prisma, timeSlotIds);
-      const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
-
-      const booking = await prisma.booking.create({
-        data: {
-          userId,
-          facilityId,
-          status: 'pending',
-          price: totalPrice,
+  async areTimeSlotsAvailable(prisma, timeSlotIds: number[], date: Date): Promise<boolean> {
+    const onlyDate = new Date(date.setHours(0, 0, 0, 0));
+    const count = await prisma.bookingSlot.count({
+      where: {
+        timeSlotId: {
+          in: timeSlotIds,
         },
-        include: {
-          facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
-          bookingSlots:{
-            include:{
-              timeSlot: true
-            }
-          }}
-      });
-      console.log(booking)
-      await this.manageBookingSlots(prisma, booking.id, timeSlots);
-
-      const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
-
-      return {...booking, startTime, endTime}
+        date: onlyDate,
+      },
     });
+
+    return count === 0;
   }
 
+  async create(createBookingInput: CreateBookingInput, userId: number) {
+      const { facilityId, timeSlotIds } = createBookingInput;
 
-  async update(id: number, updateBookingInput: UpdateBookingInput, userId: number) {
-    const { timeSlotIds } = updateBookingInput;
+      return await this.prisma.$transaction(async (prisma) => {
+        const facility = await this.fetchFacility(facilityId);
+        const timeSlots = await this.fetchTimeSlots(timeSlotIds);
 
-    return await this.prisma.$transaction(async (prisma) => {
-      const booking = await prisma.booking.findUnique({
-        where: { id },
-        include: { facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}}, },
-      });
+        const isAvailable = await this.areTimeSlotsAvailable(prisma, timeSlotIds, new Date())
 
-      if (!booking || booking.userId !== userId || booking.status !== 'pending') {
-        throw new Error('Booking is not available for updates.');
-      }
-
-      const timeSlots = await this.fetchTimeSlots(prisma, timeSlotIds);
-      const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, booking.facility.minBookingTime);
-
-      // Delete existing booking slots and create new ones
-      await this.deleteBookingSlots(prisma, id);
-      await this.manageBookingSlots(prisma, id, timeSlots);
-
-      const updatedBooking = await prisma.booking.update({
-        where: {id: booking.id},
-        data: {price: totalPrice},
-        include: {
-          facility: {include: {images: true, district: true}},
-          bookingSlots:{
-            include:{
-              timeSlot: true
-            }
-          }
+        if (!isAvailable) {
+          throw new Error('One or more time slots are not available for booking.');
         }
+
+        const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
+        const booking = await prisma.booking.create({
+          data: {
+            userId,
+            facilityId,
+            status: 'pending',
+            price: totalPrice,
+          },
+          include: {
+            facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
+            bookingSlots:{
+              include:{
+                timeSlot: true
+              }
+            }}
+        });
+
+        const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
+
+        await this.manageBookingSlots(prisma, booking.id, timeSlots, startTime);
+
+
+        return {...booking, startTime, endTime}
       });
 
-      const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
-
-      return {...updatedBooking, startTime, endTime}
-    });
   }
+
 
   async getCorrectDateTime(currentDate, targetDayOfWeek, time) {
     const currentDayOfWeek = currentDate.getDay();

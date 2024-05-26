@@ -192,7 +192,6 @@ type Mutation {
   removeFacility(id: Int!): Facility!
   removeFavorite(facilityId: Int!): Boolean!
   removeRating(facilityId: Int!): Rating!
-  updateBooking(updateBookingInput: UpdateBookingInput!): Booking!
   updateFacility(photo: Upload, updateFacilityInput: UpdateFacilityInput): UpdateFacilityResponse!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!
@@ -289,12 +288,6 @@ enum TimeSlotStatus {
   available
   booked
   unavailable
-}
-
-input UpdateBookingInput {
-  facilityId: Int
-  id: Int!
-  timeSlotIds: [Int!]
 }
 
 input UpdateFacilityInput {

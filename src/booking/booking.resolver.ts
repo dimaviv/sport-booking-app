@@ -33,12 +33,7 @@ export class BookingResolver {
     return this.bookingService.create(createBookingInput, context.req.user.id);
   }
 
-  @UseGuards(GraphqlAuthGuard)
-  @Mutation(() => Booking)
-  async updateBooking(@Args('updateBookingInput') updateBookingInput: UpdateBookingInput,
-                @Context() context: {req: Request}) {
-    return this.bookingService.update(updateBookingInput.id, updateBookingInput, context.req.user.id);
-  }
+
 
 
 }

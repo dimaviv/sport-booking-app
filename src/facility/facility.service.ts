@@ -9,7 +9,7 @@ import {FilesService} from "../files/files.service";
 import {Image} from "./facility.types";
 import {CreateScheduleInput} from "./dto/create-schedule.input";
 import {UpdateTimeSlotsInput} from "./dto/update-time-slots.input";
-
+import { Prisma } from '@prisma/client';
 
 
 @Injectable()
@@ -525,6 +525,81 @@ export class FacilityService {
     return facilityIds;
   }
 
+
+  async calcTimeSlotStatus(timeSlotsWithDates: any[], facilityId: number) {
+    // Prepare the list of dates for comparison
+    const dates = timeSlotsWithDates.map(slot => {
+      const date = new Date(slot.date);
+      return date.toISOString().split('T')[0]; // Get the date part as a string
+    });
+
+    // Construct the SQL query safely using Prisma.sql
+    const dateConditions = dates.map(date => Prisma.sql`CAST("date" AS DATE) = CAST(${date} AS DATE)`);
+
+    // Perform the raw query safely using parameterized queries
+    const query = Prisma.sql`
+    SELECT "timeSlotId", "date"
+    FROM "BookingSlot"
+    WHERE "timeSlotId" IN (
+      SELECT "id"
+      FROM "TimeSlot"
+      WHERE "facilityId" = ${facilityId}
+    )
+    AND (${Prisma.join(dateConditions, ' OR ')})
+  `;
+
+    // Use parameterized queries to avoid SQL injection
+    const bookingSlots: Array<{ timeSlotId: number, date: Date }> = await this.prisma.$queryRaw(query);
+
+    // Create a map to quickly lookup booked time slots
+    const bookedTimeSlots = new Map();
+    for (const bookingSlot of bookingSlots) {
+      bookedTimeSlots.set(`${bookingSlot.timeSlotId}_${bookingSlot.date.toISOString().split('T')[0]}`, true);
+    }
+
+    // Update the status of timeSlotsWithDates based on bookingSlots
+    await Promise.all(timeSlotsWithDates.map(async slot => {
+      const dateKey = slot.date.toISOString().split('T')[0];
+      const isBooked = bookedTimeSlots.has(`${slot.id}_${dateKey}`);
+      if (isBooked) {
+        slot.status = 'booked';
+      }
+    }));
+
+    return timeSlotsWithDates;
+  }
+
+
+  // async calcTimeSlotStatus(timeSlotsWithDates: any[], facilityId: number) {
+  //   // console.log(timeSlotsWithDates.map(slot => new Date(slot.date.setHours(0, 0, 0, 0))))
+  //   const bookingSlots = await this.prisma.bookingSlot.findMany({
+  //     where: {
+  //       timeSlot: {
+  //         facilityId: facilityId,
+  //       },
+  //       date: {
+  //         in: timeSlotsWithDates.map(slot => new Date(slot.date.setHours(0, 0, 0, 0))),
+  //       },
+  //     },
+  //     select: {
+  //       timeSlotId: true,
+  //       date: true,
+  //     },
+  //   });
+  //   console.log(timeSlotsWithDates.map(slot => slot.date))
+  //   console.log(bookingSlots)
+  //   const bookedSlotsIds = bookingSlots.map(bs => bs.timeSlotId)
+  //
+  //   timeSlotsWithDates.forEach(slot => {
+  //     const isBooked = bookedSlotsIds.includes(slot.id);
+  //     if (isBooked) slot.status = 'booked';
+  //   });
+  //   console.log('Must be booked: ', timeSlotsWithDates.find(ts => ts.id === 1541))
+  //   return timeSlotsWithDates;
+  // }
+
+
+
   async findOne(id: number, userId: number = 0) {
     try {
       const [facility, isFavorite, uniqueDaysOfWeek] = await this.prisma.$transaction([
@@ -574,11 +649,15 @@ export class FacilityService {
             }
         }),
       ]);
+
       if (!facility) return new BadRequestException('Facility with such id was not found')
+
 
       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
 
-      const groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithDates);
+      const timeSlotsWithStatus = await this.calcTimeSlotStatus(timeSlotsWithDates, id);
+
+      const groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithStatus);
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
 
