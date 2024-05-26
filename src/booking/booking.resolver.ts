@@ -34,6 +34,13 @@ export class BookingResolver {
   }
 
 
+  @UseGuards(GraphqlAuthGuard)
+  @Mutation(() => Booking)
+  async cancelBooking(@Args('bookingId') bookingId: number,
+                      @Context() context: {req: Request}) {
+    return this.bookingService.cancel(bookingId, context.req.user.id);
+  }
+
 
 
 }

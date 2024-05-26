@@ -10,9 +10,8 @@ export class BookingService {
       private readonly prisma: PrismaService,
   ) {}
 
-
+  // FIND ALL
   async findAllByUserId(userId: number, pagination) {
-
     let { page, limit } = pagination;
     const offset = (page - 1) * limit;
     const [bookings, totalCount] = await this.prisma.$transaction([
@@ -51,12 +50,10 @@ export class BookingService {
 
     const currentDate = new Date();
 
-    // Map through bookings and attach additional computed fields
     const updatedBookings = await Promise.all(bookings.map(async booking => {
       const timeSlots = booking.bookingSlots.map(slot => slot.timeSlot);
       const { startTime, endTime } = await this.getCorrectBookingTimes(currentDate, timeSlots);
 
-      // Check if there's a rating by the user for the facility
       const userHasRated = booking.facility.ratings.length > 0;
 
       return { ...booking, startTime, endTime, facility: { ...booking.facility, userHasRated } };
@@ -65,8 +62,154 @@ export class BookingService {
     return { totalCount, bookings: updatedBookings };
   }
 
-  async fetchFacility(facilityId) {
-    const facility = await this.prisma.facility.findUnique({
+  // CANCEL
+  async cancel(bookingId: number, userId: number) {
+    return await this.prisma.$transaction(async (prisma) => {
+
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
+
+      if (!booking) {
+        throw new Error('Booking not found');
+      }
+
+      if (booking.userId !== userId) {
+        throw new Error('You do not have permission to cancel this booking');
+      }
+
+      const cancelledBooking = await prisma.booking.update({
+        where: { id: bookingId },
+        data: { status: 'cancelled' },
+        include: {
+          facility: {
+            include: {
+              images: true,
+              district: true,
+              owner: { include: { userOwner: true } },
+              ratings: {
+                where: { userId: userId },
+                select: { id: true }
+              }
+            },
+          },
+        },
+      });
+
+      // await prisma.bookingSlot.deleteMany({
+      //   where: { bookingId: bookingId },
+      // });
+
+      await prisma.bookingSlot.updateMany({
+        where: { bookingId: bookingId },
+        data: { date: null },
+      });
+
+      return cancelledBooking;
+    });
+  }
+
+  // CREATE
+  async create(createBookingInput: CreateBookingInput, userId: number) {
+    const { facilityId, timeSlotIds } = createBookingInput;
+
+    return await this.prisma.$transaction(async (prisma) => {
+      const facility = await this.fetchFacility(prisma, facilityId);
+      const timeSlots = await this.fetchTimeSlots(prisma, timeSlotIds);
+
+      const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
+
+      const isAvailable = await this.areTimeSlotsAvailable(prisma, timeSlotIds, startTime);
+
+      if (!isAvailable) {
+        throw new Error('One or more time slots are not available for booking.');
+      }
+
+      const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
+
+
+      const booking = await prisma.booking.create({
+        data: {
+          userId,
+          facilityId,
+          status: 'pending',
+          price: totalPrice,
+        },
+        include: {
+          facility: {
+            include: {
+              images: true,
+              district: true,
+              owner: { include: { userOwner: true } },
+            },
+          },
+          bookingSlots: {
+            include: {
+              timeSlot: true,
+            },
+          },
+        },
+      });
+
+      await this.manageBookingSlots(prisma, booking.id, timeSlots, startTime);
+
+
+      setTimeout(() => this.bookingExpiration(booking.id), parseFloat(process.env.BOOKING_EXPIRE_TIME_MIN) * 60 * 1000);
+
+      return { ...booking, startTime, endTime };
+    });
+  }
+
+  async bookingExpiration(bookingId: number) {
+
+    return await this.prisma.$transaction(async (prisma) => {
+      const booking = await prisma.booking.findUnique({
+        where: { id: bookingId },
+      });
+
+      if (!booking) {
+        throw new Error('Booking not found');
+      }
+
+      if (booking.status === 'pending') {
+        const expiredBooking = await prisma.booking.update({
+          where: { id: bookingId },
+          data: { status: 'expired' },
+        });
+
+        await prisma.bookingSlot.updateMany({
+          where: { bookingId: bookingId },
+          data: { date: null },
+        });
+
+        return expiredBooking;
+      }
+
+      return booking;
+    });
+  }
+
+  async areTimeSlotsAvailable(prisma: any, timeSlotIds: number[], startDate: Date): Promise<boolean> {
+    let currentStartDate = new Date(startDate);
+
+    const neededDates = []
+    for (let i = 0; i< timeSlotIds.length; i++){
+      neededDates.push(new Date(currentStartDate.getTime() + 30 * i * 60000))
+    }
+    const count = await prisma.bookingSlot.count({
+      where: {
+        timeSlotId: {
+          in: timeSlotIds,
+        },
+        date: {in:neededDates},
+      },
+    });
+
+    return count === 0;
+  }
+
+  async fetchFacility(prisma: any, facilityId: number) {
+    const facility = await prisma.facility.findUnique({
       where: { id: facilityId },
       select: { minBookingTime: true },
     });
@@ -76,8 +219,8 @@ export class BookingService {
     return facility;
   }
 
-  async fetchTimeSlots(timeSlotIds) {
-     return await this.prisma.timeSlot.findMany({
+  async fetchTimeSlots(prisma: any, timeSlotIds: number[]) {
+    return await prisma.timeSlot.findMany({
       where: {
         id: { in: timeSlotIds },
         isActive: true,
@@ -86,7 +229,7 @@ export class BookingService {
     });
   }
 
-  async verifyTimeSlots(timeSlots, timeSlotIds, minBookingTime) {
+  async verifyTimeSlots(timeSlots: any[], timeSlotIds: number[], minBookingTime: number) {
     if (timeSlots.length !== timeSlotIds.length) {
       throw new Error('One or more time slots are not available for booking.');
     }
@@ -95,11 +238,14 @@ export class BookingService {
         throw new Error('Time slots are not sequential.');
       }
     }
-    const { totalPrice, totalDuration } = timeSlots.reduce((acc, slot) => {
-      acc.totalPrice += Number(slot.price || 0);
-      acc.totalDuration += slot.endTime.getTime() - slot.startTime.getTime();
-      return acc;
-    }, { totalPrice: 0, totalDuration: 0 });
+    const { totalPrice, totalDuration } = timeSlots.reduce(
+        (acc, slot) => {
+          acc.totalPrice += Number(slot.price || 0);
+          acc.totalDuration += slot.endTime.getTime() - slot.startTime.getTime();
+          return acc;
+        },
+        { totalPrice: 0, totalDuration: 0 }
+    );
 
     let totalDurationInMinutes = totalDuration / (1000 * 60);
     if (totalDurationInMinutes < minBookingTime) {
@@ -108,12 +254,9 @@ export class BookingService {
     return { totalPrice, totalDurationInMinutes };
   }
 
-
-
-  async manageBookingSlots(prisma, bookingId, timeSlots, startDate: Date) {
-    console.log('startdate: ', startDate)
+  async manageBookingSlots(prisma: any, bookingId: number, timeSlots: any[], startDate: Date) {
     let currentStartDate = new Date(startDate);
-    const bookingSlotsData = timeSlots.map(slot => {
+    const bookingSlotsData = timeSlots.map((slot) => {
       const bookingSlot = {
         bookingId,
         timeSlotId: slot.id,
@@ -125,75 +268,13 @@ export class BookingService {
       return bookingSlot;
     });
 
-    console.log(bookingSlotsData)
-
     return await prisma.bookingSlot.createMany({
       data: bookingSlotsData,
     });
   }
 
-  async deleteBookingSlots(prisma, bookingId) {
-    await prisma.bookingSlot.deleteMany({
-      where: { bookingId: bookingId },
-    });
-  }
 
-  async areTimeSlotsAvailable(prisma, timeSlotIds: number[], date: Date): Promise<boolean> {
-    const onlyDate = new Date(date.setHours(0, 0, 0, 0));
-    const count = await prisma.bookingSlot.count({
-      where: {
-        timeSlotId: {
-          in: timeSlotIds,
-        },
-        date: onlyDate,
-      },
-    });
-
-    return count === 0;
-  }
-
-  async create(createBookingInput: CreateBookingInput, userId: number) {
-      const { facilityId, timeSlotIds } = createBookingInput;
-
-      return await this.prisma.$transaction(async (prisma) => {
-        const facility = await this.fetchFacility(facilityId);
-        const timeSlots = await this.fetchTimeSlots(timeSlotIds);
-
-        const isAvailable = await this.areTimeSlotsAvailable(prisma, timeSlotIds, new Date())
-
-        if (!isAvailable) {
-          throw new Error('One or more time slots are not available for booking.');
-        }
-
-        const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
-        const booking = await prisma.booking.create({
-          data: {
-            userId,
-            facilityId,
-            status: 'pending',
-            price: totalPrice,
-          },
-          include: {
-            facility: {include: {images: true, district: true, owner: {include: {userOwner: true}},}},
-            bookingSlots:{
-              include:{
-                timeSlot: true
-              }
-            }}
-        });
-
-        const { startTime, endTime } = await this.getCorrectBookingTimes(new Date(), timeSlots);
-
-        await this.manageBookingSlots(prisma, booking.id, timeSlots, startTime);
-
-
-        return {...booking, startTime, endTime}
-      });
-
-  }
-
-
-  async getCorrectDateTime(currentDate, targetDayOfWeek, time) {
+  async getCorrectDateTime(currentDate: Date, targetDayOfWeek: number, time: Date) {
     const currentDayOfWeek = currentDate.getDay();
     let dayDiff = targetDayOfWeek - currentDayOfWeek;
 
@@ -208,9 +289,9 @@ export class BookingService {
     return correctDate;
   }
 
-  async getCorrectBookingTimes(currentDate = new Date(), timeSlots) {
+  async getCorrectBookingTimes(currentDate = new Date(), timeSlots: any[]) {
     if (timeSlots.length === 0) {
-      throw new Error("Time slots array is empty.");
+      throw new Error('Time slots array is empty.');
     }
 
     const firstSlot = timeSlots[0];
@@ -221,4 +302,5 @@ export class BookingService {
 
     return { startTime, endTime };
   }
+
 }

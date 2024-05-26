@@ -178,6 +178,7 @@ type Mutation {
   accessToken(refresh: String): String!
   addFavorite(facilityId: Int!): Boolean!
   addOwnerInfo(ownerInfo: AddOwnerInfoInput!): User!
+  cancelBooking(bookingId: Float!): Booking!
   create(roleInput: RoleDto!): RoleResponse!
   createBooking(createBookingInput: CreateBookingInput!): Booking!
   createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): CreateFacilityResponse!
