@@ -14,6 +14,7 @@ type Booking {
   facility: Facility!
   facilityId: Int!
   id: Int!
+  includesInventory: Boolean
   price: Float
   startTime: DateTime!
   status: String
@@ -44,6 +45,7 @@ type City {
 
 input CreateBookingInput {
   facilityId: Int!
+  includesInventory: Boolean
   timeSlotIds: [Int!]!
 }
 
@@ -141,6 +143,9 @@ type Facility {
   facilityType: String
   id: Float!
   images: [Image!]
+  inventoryName: String
+  inventoryPrice: Float
+  isRemoved: Boolean
   isWorking: Boolean
   location: String
   minBookingTime: Float
@@ -297,6 +302,8 @@ input UpdateFacilityInput {
   description: String
   facilityType: facility_type
   id: Float!
+  inventoryName: String
+  inventoryPrice: Float
   isWorking: Boolean
   minBookingTime: Float
   name: String

@@ -1,5 +1,5 @@
 import {Field, InputType, Int} from "@nestjs/graphql";
-import {IsInt, IsNotEmpty, IsNumber} from "class-validator";
+import {IsInt, IsNotEmpty, IsNumber, IsOptional} from "class-validator";
 
 @InputType()
 export class CreateBookingInput {
@@ -12,4 +12,8 @@ export class CreateBookingInput {
   @IsNumber({},{each: true})
   @Field(() => [Int])
   timeSlotIds: number[];
+
+  @IsOptional()
+  @Field({ nullable: true })
+  includesInventory?: boolean;
 }

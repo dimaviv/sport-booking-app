@@ -111,7 +111,7 @@ export class BookingService {
 
   // CREATE
   async create(createBookingInput: CreateBookingInput, userId: number) {
-    const { facilityId, timeSlotIds } = createBookingInput;
+    const { facilityId, timeSlotIds, includesInventory } = createBookingInput;
 
     return await this.prisma.$transaction(async (prisma) => {
       const facility = await this.fetchFacility(prisma, facilityId);
@@ -126,13 +126,16 @@ export class BookingService {
       }
 
       const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
+      let totalPriceWithInventory
+      if (includesInventory) totalPriceWithInventory = totalPrice + facility.inventoryPrice ?? 0;
 
       const booking = await prisma.booking.create({
         data: {
           userId,
           facilityId,
           status: 'pending',
-          price: totalPrice,
+          price: totalPriceWithInventory ?? totalPrice,
+          includesInventory,
         },
         include: {
           facility: {

@@ -80,6 +80,15 @@ export class Facility {
   @Field()
   avgRating: number;
 
+  @Field({ nullable: true })
+  inventoryName: string;
+
+  @Field({ nullable: true })
+  inventoryPrice: number;
+
+  @Field({ nullable: true })
+  isRemoved: Boolean;
+
   @Field(() => Rating, { nullable: true })
   currentUserRate?: Rating;
 

@@ -1,5 +1,5 @@
 import { InputType, Field } from '@nestjs/graphql';
-import {IsArray, IsBoolean, IsEnum, IsInt, IsOptional, IsString} from "class-validator";
+import {IsArray, IsBoolean, IsEnum, IsInt, IsNumber, IsOptional, IsString} from "class-validator";
 import {covering_type, facility_type, sport_type} from "@prisma/client";
 
 
@@ -49,4 +49,16 @@ export class UpdateFacilityInput {
   @IsOptional()
   @IsBoolean({ message: 'isWorking must be a boolean' })
   readonly isWorking?: boolean;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsString({ message: 'inventory name must be a string' })
+  readonly inventoryName: string;
+
+  @Field({ nullable: true })
+  @IsOptional()
+  @IsNumber()
+  readonly inventoryPrice: number;
+
+
 }

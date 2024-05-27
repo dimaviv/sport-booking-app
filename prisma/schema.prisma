@@ -54,12 +54,14 @@ model Payment {
 }
 
 model Booking {
-  id           Int            @id @default(autoincrement())
-  userId       Int
-  status       BookingStatus  @default(pending)
-  price        Decimal?       @db.Decimal(8, 2)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  id                Int            @id @default(autoincrement())
+  userId            Int
+  status            BookingStatus  @default(pending)
+  price             Decimal?       @db.Decimal(8, 2)
+  includesInventory Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
   bookingSlots BookingSlot[]
   user         User           @relation(fields: [userId], references: [id])
   facility     Facility       @relation(fields: [facilityId], references: [id])
@@ -133,6 +135,9 @@ model Facility {
   districtId     Int
   isWorking      Boolean                 @default(false)
   isRemoved      Boolean                 @default(false)
+
+  inventoryPrice Decimal?                @db.Decimal(8, 2)
+  inventoryName  String?
 
   owner         User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   district      District                 @relation(fields: [districtId], references: [id]) // New relation to District

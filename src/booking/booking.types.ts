@@ -42,6 +42,9 @@ export class Booking {
   @Field()
   endTime: Date;
 
+  @Field({ nullable: true })
+  includesInventory: Boolean;
+
 }
 
 @ObjectType()

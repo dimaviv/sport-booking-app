@@ -525,7 +525,6 @@ export class FacilityService {
     return facilityIds;
   }
 
-
   async calcTimeSlotStatus(timeSlotsWithDates: any[], facilityId: number) {
     // Prepare the list of dates for comparison
     const dates = timeSlotsWithDates.map(slot => {
@@ -568,35 +567,6 @@ export class FacilityService {
 
     return timeSlotsWithDates;
   }
-
-
-  // async calcTimeSlotStatus(timeSlotsWithDates: any[], facilityId: number) {
-  //   // console.log(timeSlotsWithDates.map(slot => new Date(slot.date.setHours(0, 0, 0, 0))))
-  //   const bookingSlots = await this.prisma.bookingSlot.findMany({
-  //     where: {
-  //       timeSlot: {
-  //         facilityId: facilityId,
-  //       },
-  //       date: {
-  //         in: timeSlotsWithDates.map(slot => new Date(slot.date.setHours(0, 0, 0, 0))),
-  //       },
-  //     },
-  //     select: {
-  //       timeSlotId: true,
-  //       date: true,
-  //     },
-  //   });
-  //   console.log(timeSlotsWithDates.map(slot => slot.date))
-  //   console.log(bookingSlots)
-  //   const bookedSlotsIds = bookingSlots.map(bs => bs.timeSlotId)
-  //
-  //   timeSlotsWithDates.forEach(slot => {
-  //     const isBooked = bookedSlotsIds.includes(slot.id);
-  //     if (isBooked) slot.status = 'booked';
-  //   });
-  //   console.log('Must be booked: ', timeSlotsWithDates.find(ts => ts.id === 1541))
-  //   return timeSlotsWithDates;
-  // }
 
   async findOne(id: number, userId: number = 0) {
     try {
