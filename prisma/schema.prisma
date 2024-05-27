@@ -119,7 +119,7 @@ model UserOwner {
 }
 
 model Facility {
-  id             Int            @id @default(autoincrement())
+  id             Int                   @id @default(autoincrement())
   name           String?
   address        String?
   sportType      sport_type[]
@@ -128,10 +128,11 @@ model Facility {
   description    String?
   location       String?
   minBookingTime Int?
-  avgPrice       Decimal?       @db.Decimal(8, 2)
+  avgPrice       Decimal?                @db.Decimal(8, 2)
   ownerId        Int
   districtId     Int
-  isWorking      Boolean        @default(false)
+  isWorking      Boolean                 @default(false)
+  isRemoved      Boolean                 @default(false)
 
   owner         User                     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   district      District                 @relation(fields: [districtId], references: [id]) // New relation to District

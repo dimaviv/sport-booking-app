@@ -355,7 +355,7 @@ export class FacilityService {
             not: null
           }  },
         ...(searchIds && { id:{in:searchIds} }),
-
+        isRemoved: false,
       };
 
       let orderBy = [];
@@ -438,7 +438,7 @@ export class FacilityService {
     try {
       let { page, limit } = pagination;
 
-      const where = {ownerId: userId}
+      const where = {ownerId: userId, isRemoved: false}
 
       const [facilities, totalCount, priceRangeAggr] = await this.prisma.$transaction([
         this.prisma.facility.findMany({
@@ -598,8 +598,6 @@ export class FacilityService {
   //   return timeSlotsWithDates;
   // }
 
-
-
   async findOne(id: number, userId: number = 0) {
     try {
       const [facility, isFavorite, uniqueDaysOfWeek] = await this.prisma.$transaction([
@@ -651,7 +649,7 @@ export class FacilityService {
       ]);
 
       if (!facility) return new BadRequestException('Facility with such id was not found')
-
+      if(facility.isRemoved) return new BadRequestException('Facility is removed')
 
       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
 
@@ -734,8 +732,9 @@ export class FacilityService {
       const facility = await this.prisma.facility.findUnique({where:{id}, select: {id:true, ownerId: true}})
       if (userId !== facility.ownerId) return new UnauthorizedException("User is not the owner")
 
-      return await this.prisma.facility.delete({
+      return await this.prisma.facility.update({
         where: {id},
+        data:{isRemoved: true}
       })
     } catch (e) {
       throw new InternalException(e.message);

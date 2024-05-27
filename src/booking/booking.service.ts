@@ -127,7 +127,6 @@ export class BookingService {
 
       const { totalPrice } = await this.verifyTimeSlots(timeSlots, timeSlotIds, facility.minBookingTime);
 
-
       const booking = await prisma.booking.create({
         data: {
           userId,
