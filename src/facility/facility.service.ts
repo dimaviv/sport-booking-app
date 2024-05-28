@@ -621,11 +621,16 @@ export class FacilityService {
       if (!facility) return new BadRequestException('Facility with such id was not found')
       if(facility.isRemoved) return new BadRequestException('Facility is removed')
 
-      const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
+      if(!facility.avgPrice && facility.ownerId !== userId)
+        return new BadRequestException('Only facility owner can see the facility without schedule')
 
-      const timeSlotsWithStatus = await this.calcTimeSlotStatus(timeSlotsWithDates, id);
 
-      const groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithStatus);
+      let groupedTimeSlots;
+     if (facility.timeSlots.length > 0){
+       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
+       const timeSlotsWithStatus = await this.calcTimeSlotStatus(timeSlotsWithDates, id);
+       groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithStatus);
+     }
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
 

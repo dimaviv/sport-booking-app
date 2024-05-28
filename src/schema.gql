@@ -55,6 +55,8 @@ input CreateFacilityInput {
   description: String
   districtId: Float!
   facilityType: facility_type!
+  inventoryName: String
+  inventoryPrice: Float
   location: String
   minBookingTime: Float
   name: String!
