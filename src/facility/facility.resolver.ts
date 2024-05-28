@@ -81,6 +81,18 @@ export class FacilityResolver {
   }
 
   @UseGuards(GraphqlAuthGuard)
+  @Mutation(() => Boolean)
+  async removeFacilityPhotos(
+      @Args('photoIds', { type: () => [Number] }) photoIds: number[],
+      @Context() context: { req: Request }
+  ): Promise<boolean> {
+    if (!context.req.user.roles.includes('OWNER')) throw new UnauthorizedException("User doesn't own any facility");
+
+    return await this.facilityService.removeFacilityPhotos(photoIds, context.req.user.id);
+  }
+
+
+  @UseGuards(GraphqlAuthGuard)
   @Mutation(() => [Image])
   async uploadFacilityPhotos( @Args('facilityId') facilityId: number,
                @Args('photos', { type: () => [GraphQLUpload] })

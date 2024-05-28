@@ -22,6 +22,48 @@ export class FacilityService {
   ) {}
 
 
+  async removeFacilityPhotos(photoIds: number[], userId: number): Promise<boolean> {
+    try {
+      return await this.prisma.$transaction(async (prisma) => {
+        const images = await prisma.image.findMany({
+          where: {
+            id: {
+              in: photoIds,
+            },
+          },
+        });
+
+        if (images.length !== photoIds.length) {
+          throw new NotFoundException("Some images not found");
+        }
+
+        const facilityIds = images.map(image => image.facilityId);
+
+        for (const facilityId of facilityIds) {
+          if (!await this.isOwner(facilityId, userId)) {
+            throw new BadRequestException("User isn't the owner of facility with id " + facilityId);
+          }
+        }
+
+        const deletedImages = await prisma.image.deleteMany({
+          where: {
+            id: {
+              in: photoIds,
+            },
+          },
+        });
+
+        for (const image of images) {
+          await this.fileService.deleteFile(image.image);
+        }
+
+        return !!deletedImages.count;
+      });
+    } catch (e) {
+      throw new InternalException(e.message);
+    }
+  }
+
   async updateTimeSlots(updateTimeSlotsInput: UpdateTimeSlotsInput, userId: number) {
     try {
       let { timeSlotIds, ...slotsData } = updateTimeSlotsInput;
@@ -570,20 +612,20 @@ export class FacilityService {
 
   async findOne(id: number, userId: number = 0) {
     try {
-      const [facility, isFavorite, uniqueDaysOfWeek] = await this.prisma.$transaction([
+      const [facility, isFavorite, uniqueDaysOfWeek, userHasAttended] = await this.prisma.$transaction([
         this.prisma.facility.findUnique({
           where: { id },
           include: {
-            owner: {include: {userOwner: true}},
+            owner: { include: { userOwner: true } },
             images: true,
             district: {
-              include:{
+              include: {
                 city: {
-                  include:{
-                    districts: true
-                  }
+                  include: {
+                    districts: true,
+                  },
                 },
-              }
+              },
             },
             timeSlots: {
               where: {
@@ -612,25 +654,32 @@ export class FacilityService {
         this.prisma.timeSlot.findMany({
           where: { facilityId: id },
           distinct: ['dayOfWeek'],
-          select:{
+          select: {
             dayOfWeek: true,
-            }
+          },
+        }),
+        this.prisma.booking.findFirst({
+          where: {
+            userId: userId,
+            facilityId: id,
+            status: 'completed',
+          },
+          select: { id: true },
         }),
       ]);
 
-      if (!facility) return new BadRequestException('Facility with such id was not found')
-      if(facility.isRemoved) return new BadRequestException('Facility is removed')
+      if (!facility) return new BadRequestException('Facility with such id was not found');
+      if (facility.isRemoved) return new BadRequestException('Facility is removed');
 
-      if(!facility.avgPrice && facility.ownerId !== userId)
-        return new BadRequestException('Only facility owner can see the facility without schedule')
-
+      if (!facility.avgPrice && facility.ownerId !== userId)
+        return new BadRequestException('Only facility owner can see the facility without schedule');
 
       let groupedTimeSlots;
-     if (facility.timeSlots.length > 0){
-       const {timeSlotsWithDates, bookingDates} = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek)
-       const timeSlotsWithStatus = await this.calcTimeSlotStatus(timeSlotsWithDates, id);
-       groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithStatus);
-     }
+      if (facility.timeSlots.length > 0) {
+        const { timeSlotsWithDates, bookingDates } = await this.calcTimeSlotDate(facility.timeSlots, uniqueDaysOfWeek);
+        const timeSlotsWithStatus = await this.calcTimeSlotStatus(timeSlotsWithDates, id);
+        groupedTimeSlots = await this.groupTimeSlotsByDateAndDayOfWeek(timeSlotsWithStatus);
+      }
 
       const aggregateRating = await this.ratingService.aggregateRating(id);
 
@@ -644,11 +693,13 @@ export class FacilityService {
         currentUserRate: userRate,
         currentUserIsFavorite: !!isFavorite,
         schedule: groupedTimeSlots,
+        userHasAttended: !!userHasAttended,
       };
     } catch (e) {
       throw new InternalException(e.message);
     }
   }
+
 
   async groupTimeSlotsByDateAndDayOfWeek(timeSlots) {
     // Use a Map as the accumulator

@@ -102,6 +102,9 @@ export class Facility {
   userHasRated?: Boolean;
 
   @Field(() => Boolean, { nullable: true })
+  userHasAttended: Boolean;
+
+  @Field(() => Boolean, { nullable: true })
   isWorking?: Boolean;
 
   @Field(() => [TimeSlot], { nullable: true })

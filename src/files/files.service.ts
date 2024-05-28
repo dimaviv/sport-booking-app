@@ -100,6 +100,19 @@ export class FilesService {
         }
     }
 
+    async deleteFile(fileName: string): Promise<void> {
+        const filePath = path.resolve(__dirname, '..', 'static', fileName);
+
+        try {
+            if (fs.existsSync(filePath)) {
+                fs.unlinkSync(filePath);
+            }
+        } catch (e) {
+            throw new HttpException(e.message, e.status);
+        }
+    }
+
+
     async streamToBuffer(readStream: NodeJS.ReadableStream): Promise<Buffer> {
         return new Promise<Buffer>((resolve, reject) => {
             const chunks: Buffer[] = [];
