@@ -1,12 +1,35 @@
-import {Controller, Get, Query, Res, HttpStatus, Req, Next} from '@nestjs/common';
+import {Controller, Get, Query, Res, HttpStatus, Req, Next, Param} from '@nestjs/common';
 import { Response, Request } from 'express';
 import { UserService } from './user.service';
-import * as path from "path";
-const deeplink = require('node-deeplink');
+
 
 @Controller('user')
 export class UserController {
     constructor(private readonly userService: UserService) {}
+
+    @Get('restore-password')
+    async restorePassword(
+        @Param('token') token: string,
+        @Next() next,
+        @Req() req: Request,
+        @Res() res: Response
+    ) {
+        try {
+            const userAgent = req.headers['user-agent'];
+            console.log(userAgent)
+
+            if (this.isMobileDevice(userAgent)) {
+                const deepLinkUrl = `${process.env.MIBILE_APP_SCHEMA}://link/restore-password?token=${token}`;
+                console.log(deepLinkUrl)
+                res.redirect(deepLinkUrl);
+            }
+            return res.redirect(`${process.env.APP_URL}/restore-password?token=${token}`);
+
+        } catch (error) {
+            console.log(error)
+            return res.redirect(`${process.env.APP_URL}/restore-password?token=${token}`);
+        }
+    }
 
     @Get('verify-email')
     async verifyEmail(
@@ -16,43 +39,28 @@ export class UserController {
         @Res() res: Response
     ) {
         try {
-            //const result = await this.userService.verifyEmailToken(token);
-            const result = true;
+            const result = await this.userService.verifyEmailToken(token);
             const userAgent = req.headers['user-agent'];
             console.log(userAgent)
 
             if (result) {
                 if (this.isMobileDevice(userAgent)) {
-
-                    console.log(`${process.env.APP_URL}/mobile-app-download`)
-                    console.log(process.env.ANDROID_PACKAGE_NAME)
-                    console.log(process.env.IOS_STORE_LINK)
-
-                    const dp = deeplink({
-                        fallback: `${process.env.APP_URL}/mobile-app-download`,
-                        android_package_name: `${process.env.ANDROID_PACKAGE_NAME}`,
-                        ios_store_link: `${process.env.IOS_STORE_LINK}`,
-                        url: `${process.env.APP_URL}/link/email-confirmation`, // Specify the deeplink URL here
-                        // delay: 1000,
-                        // callback: null,
-                    })(req, res, next);
-
-                    return dp;
-                } else {
-                    return res.redirect(`${process.env.APP_URL}/email-verification-success`);
+                    const deepLinkUrl = `${process.env.MIBILE_APP_SCHEMA}://link/email-confirmation`;
+                    console.log(deepLinkUrl)
+                    res.redirect(deepLinkUrl);
                 }
-            } else {
-               // return res.redirect(`${process.env.APP_URL}/email-verification-error`);
-                res.status(HttpStatus.BAD_REQUEST).json({ message: 'Invalid or expired token.' });
+                return res.redirect(`${process.env.APP_URL}/email-verification-success`);
             }
+
+            return res.redirect(`${process.env.APP_URL}/email-verification-error`);
+            //res.status(HttpStatus.BAD_REQUEST).json({message: 'Invalid or expired token.'});
+
         } catch (error) {
             console.log(error)
-            // return res.redirect(`${process.env.APP_URL}/email-verification-error`);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error.', error });
+            return res.redirect(`${process.env.APP_URL}/email-verification-error`);
+            //res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ message: 'Server error.', error });
         }
     }
-
-
 
     private isMobileDevice(userAgent: string): boolean {
         const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;

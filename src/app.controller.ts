@@ -16,7 +16,7 @@ export class AppController {
   @Get('link/facility/:id')
   redirectToDeepLink(@Param('id') id: string, @Res() res: Response) {
 
-    const deepLinkUrl = `mysportapp://link/facility/${id}`;
+    const deepLinkUrl = `${process.env.MIBILE_APP_SCHEMA}://link/facility/${id}`;
     console.log(deepLinkUrl)
     res.redirect(deepLinkUrl);
   }
