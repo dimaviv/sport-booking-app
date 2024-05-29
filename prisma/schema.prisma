@@ -101,6 +101,9 @@ model User {
   isActivated    Boolean      @default(false)
   googleId       String?      @unique
   facebookId     String?      @unique
+  restorePasswordToken  String?  @unique
+  tokenExpiresAt        DateTime?
+
 
   facilities Facility[] @relation("UserFacilities")
   favorites  Favorite[]

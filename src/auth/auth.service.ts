@@ -170,7 +170,8 @@ export class AuthService {
         }
         const expiredIn = 15000;
         const expiration = Math.floor(Date.now() / 1000) + expiredIn;
-        payload.roles = userExists.roles.map(role => role.value)
+        payload.roles = userExists.roles.map(role => role.value);
+        payload.isActivated = userExists.isActivated;
 
         const accessToken = this.jwtService.sign(
             {...payload, exp:expiration},

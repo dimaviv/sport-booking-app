@@ -8,7 +8,9 @@ import {User} from "./user.type";
 import {AddOwnerInfoInput} from "./dto/add-owner-info.input";
 import {RatingService} from "../rating/rating.service";
 import {mergeFacilitiesWithRating} from "../utils/arrayMerger";
-
+import * as bcrypt from "bcrypt";
+import {v4 as uuidv4} from 'uuid';
+import {MailService} from "../mail/mail.service";
 
 @Injectable()
 export class UserService {
@@ -17,6 +19,7 @@ export class UserService {
                 private readonly ratingService: RatingService,
                 private readonly roleService: RolesService,
                 private readonly fileService: FilesService,
+                private readonly mailService: MailService,
     ) {}
 
     async getUserFavorites(userId: number, pagination) {
@@ -275,6 +278,85 @@ export class UserService {
             throw new BadRequestException('Invalid or expired token.');
         }
     }
+
+
+    async sendRestorePasswordEmail(email: string): Promise<void> {
+        const user = await this.prisma.user.findUnique({
+            where: { email },
+        });
+
+        if (!user) {
+            throw new BadRequestException('User with this email does not exist.');
+        }
+
+        const token = await uuidv4();
+        const expiresAt = new Date();
+        expiresAt.setHours(expiresAt.getHours() + 1); // Token valid for 1 hour
+
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                restorePasswordToken: token,
+                tokenExpiresAt: expiresAt,
+            },
+        });
+
+        const restoreURL = `${process.env.APP_URL}/restore-password?token=${token}`;
+
+        await this.mailService.sendRestorePasswordMail(user.email, restoreURL);
+    }
+
+    async resetPassword(token: string, newPassword: string): Promise<boolean> {
+        const user = await this.prisma.user.findUnique({
+            where: { restorePasswordToken: token },
+        });
+
+        if (!user) {
+            throw new BadRequestException('Invalid or expired token.');
+        }
+
+        if (user.tokenExpiresAt && new Date() > user.tokenExpiresAt) {
+            throw new BadRequestException('Token has expired.');
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        await this.prisma.user.update({
+            where: { id: user.id },
+            data: {
+                password: hashedPassword,
+                restorePasswordToken: null,
+                tokenExpiresAt: null,
+            },
+        });
+
+        return true;
+    }
+
+
+    async changePassword(userId: number, oldPassword: string, newPassword: string): Promise<User> {
+        const user = await this.prisma.user.findUnique({
+            where: { id: userId },
+        });
+
+        if (!user) {
+            throw new BadRequestException('User not found.');
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, user.password);
+        if (!isMatch) {
+            throw new BadRequestException('Old password is incorrect.');
+        }
+
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        return await this.prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword },
+        });
+    }
+
+
+
 
 
 

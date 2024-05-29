@@ -159,6 +159,7 @@ type Facility {
   schedule: [DailySchedule!]
   sportType: [String!]
   timeSlots: [TimeSlot!]
+  userHasAttended: Boolean
   userHasRated: Boolean
 }
 
@@ -186,6 +187,7 @@ type Mutation {
   addFavorite(facilityId: Int!): Boolean!
   addOwnerInfo(ownerInfo: AddOwnerInfoInput!): User!
   cancelBooking(bookingId: Float!): Booking!
+  changePassword(newPassword: String!, oldPassword: String!): User!
   create(roleInput: RoleDto!): RoleResponse!
   createBooking(createBookingInput: CreateBookingInput!): Booking!
   createFacility(createFacilityInput: CreateFacilityInput!, photo: Upload): CreateFacilityResponse!
@@ -198,8 +200,11 @@ type Mutation {
   logout: String!
   register(registerInput: RegisterDto!): RegisterResponse!
   removeFacility(id: Int!): Facility!
+  removeFacilityPhotos(photoIds: [Float!]!): Boolean!
   removeFavorite(facilityId: Int!): Boolean!
   removeRating(facilityId: Int!): Rating!
+  resetPassword(newPassword: String!, token: String!): Boolean!
+  restorePassword(email: String!): Boolean!
   updateFacility(photo: Upload, updateFacilityInput: UpdateFacilityInput): UpdateFacilityResponse!
   updateProfile(avatar: Upload, profileInput: UpdateUserDto): User!
   updateRating(updateRatingInput: UpdateRatingInput!): Rating!

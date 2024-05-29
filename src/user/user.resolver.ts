@@ -18,6 +18,35 @@ export class UserResolver {
         private readonly userService: UserService,
     ) {}
 
+
+    @UseGuards(GraphqlAuthGuard)
+    @Mutation(() => User)
+    async changePassword(
+        @Args('oldPassword') oldPassword: string,
+        @Args('newPassword') newPassword: string,
+        @Context() context: { req: Request },
+    ): Promise<User> {
+        const userId = context.req.user.id;
+        return await this.userService.changePassword(userId, oldPassword, newPassword);
+    }
+
+    @Mutation(() => Boolean)
+    async restorePassword(
+        @Args('email') email: string,
+    ): Promise<boolean> {
+        await this.userService.sendRestorePasswordEmail(email);
+        return true;
+    }
+
+    @Mutation(() => Boolean)
+    async resetPassword(
+        @Args('token') token: string,
+        @Args('newPassword') newPassword: string,
+    ): Promise<boolean> {
+        return await this.userService.resetPassword(token, newPassword);
+    }
+
+
     @UseGuards(GraphqlAuthGuard)
     @Query(() => FacilitiesResponse)
     async getUserFavorites(
@@ -79,5 +108,6 @@ export class UserResolver {
         const userId = context.req.user.id;
         return await this.userService.updateProfile(userId, updateUserDto, avatar)
     }
+
 
 }

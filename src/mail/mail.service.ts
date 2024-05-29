@@ -27,4 +27,16 @@ export class MailService {
 
         await this.transporter.sendMail(mailOptions);
     }
+
+    async sendRestorePasswordMail(email: string, restoreLink: string): Promise<void> {
+        const mailOptions = {
+            from: process.env.SMTP_USER,
+            to: email,
+            subject: 'Password Reset Request',
+            html: `<p>Please click the following link to reset your password: <a href="${restoreLink}">${restoreLink}</a></p>`,
+        };
+
+        await this.transporter.sendMail(mailOptions);
+    }
+
 }

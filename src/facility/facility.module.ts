@@ -14,6 +14,7 @@ import {GraphqlAuthGuard} from "../auth/graphql-auth.guard";
 import {GraphqlAuthCheck} from "../auth/graphql-auth-check.guard";
 import {RolesGuard} from "../auth/roles.guard";
 import {AuthModule} from "../auth/auth.module";
+import {MailModule} from "../mail/mail.module";
 
 
 @Module({
@@ -26,6 +27,7 @@ import {AuthModule} from "../auth/auth.module";
     forwardRef(() => AuthModule),
     FilesModule,
     forwardRef(() => RatingModule),
+    MailModule,
   ],
   exports: [
     FacilityService,
