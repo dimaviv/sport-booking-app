@@ -1,4 +1,4 @@
-import {Controller, Get, Res} from '@nestjs/common';
+import {Controller, Get, Param, Res} from '@nestjs/common';
 import { AppService } from './app.service';
 import {Response} from "express";
 import * as path from "path";
@@ -12,4 +12,13 @@ export class AppController {
     const filePath = path.resolve(__dirname, 'static/assetlinks.json');
     res.sendFile(filePath);
   }
+
+  @Get('link/facility/:id')
+  redirectToDeepLink(@Param('id') id: string, @Res() res: Response) {
+
+    const deepLinkUrl = `mysportapp://link/facility/${id}`;
+    console.log(deepLinkUrl)
+    res.redirect(deepLinkUrl);
+  }
+
 }
