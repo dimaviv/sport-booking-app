@@ -9,7 +9,7 @@ export class UserController {
 
     @Get('restore-password')
     async restorePassword(
-        @Param('token') token: string,
+        @Query('token') token: string,
         @Next() next,
         @Req() req: Request,
         @Res() res: Response

@@ -301,7 +301,7 @@ export class UserService {
             },
         });
 
-        const restoreURL = `${process.env.API_URL}/restore-password?token=${token}`;
+        const restoreURL = `${process.env.API_URL}/user/restore-password?token=${token}`;
 
         await this.mailService.sendRestorePasswordMail(user.email, restoreURL);
     }
